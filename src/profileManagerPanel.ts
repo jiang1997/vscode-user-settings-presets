@@ -16,7 +16,7 @@ export class ProfileManagerPanel {
 
     const panel = vscode.window.createWebviewPanel(
       'profileManager',
-      'Claude Profiles',
+      'Claude Code Profiles',
       vscode.ViewColumn.One,
       { enableScripts: true, retainContextWhenHidden: true },
     );
