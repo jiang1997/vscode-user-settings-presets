@@ -18,7 +18,7 @@
     "commands": [
       {
         "command": "claudeSettingManager.manageProfiles",
-        "title": "Claude Setting: Manage Profiles",
+        "title": "Manage Profiles",
         "category": "Claude Setting"
       }
     ],
