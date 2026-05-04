@@ -196,73 +196,96 @@ function buildHtml(): string {
   .editor-content { display: none; flex-direction: column; flex: 1; }
   .editor-content.visible { display: flex; }
 
-  .badge {
-    display: inline-block; padding: 2px 10px; border-radius: 10px;
-    font-size: 12px; font-weight: 600; margin-bottom: 16px;
-    background: var(--vscode-badge-background);
-    color: var(--vscode-badge-foreground); align-self: flex-start;
+  .card {
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 4px; padding: 14px 16px; margin-bottom: 14px;
   }
-  .badge.inactive { opacity: 0.5; }
-  .section { margin-bottom: 16px; }
-  label {
-    display: block; margin-bottom: 4px; font-weight: 600;
-    color: var(--vscode-foreground);
+  .card-header {
+    font-weight: 600; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--vscode-descriptionForeground);
+    margin-bottom: 10px;
   }
-  .ev-name, .ev-value, #profileName {
-    width: 100%; padding: 5px 8px;
+  .profile-header {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .profile-header input {
+    flex: 1; padding: 5px 8px;
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, #3c3c3c);
+    border-radius: 2px; font-family: var(--vscode-font-family); font-size: 14px; font-weight: 500;
+  }
+  .profile-header input:focus { outline: 1px solid var(--vscode-focusBorder, #007acc); outline-offset: -1px; }
+  .active-pill {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+    padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
+    background: var(--vscode-badge-background); color: var(--vscode-badge-foreground);
+  }
+  .active-pill.inactive { opacity: 0.4; }
+  .ev-name, .ev-value {
+    width: 100%; padding: 4px 6px;
     background: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     border: 1px solid var(--vscode-input-border, #3c3c3c);
     border-radius: 2px;
     font-family: var(--vscode-editor-font-family, monospace);
-    font-size: 13px;
+    font-size: 12px;
   }
   input:focus, select:focus {
     outline: 1px solid var(--vscode-focusBorder, #007acc);
     outline-offset: -1px;
   }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; }
   th {
-    text-align: left; font-weight: 500; font-size: 12px;
-    padding: 4px 6px 6px;
+    text-align: left; font-weight: 500; font-size: 11px;
+    padding: 4px 6px 5px;
     color: var(--vscode-descriptionForeground);
     border-bottom: 1px solid var(--vscode-panel-border);
   }
-  th.act { width: 36px; }
-  td { padding: 3px 3px; vertical-align: middle; }
-  td.nm { width: 32%; }
-  td.vl { width: calc(68% - 36px); }
-  td.act { width: 36px; text-align: center; }
+  th.act { width: 30px; }
+  td { padding: 2px 3px; vertical-align: middle; }
+  td.nm { width: 30%; }
+  td.vl { width: calc(70% - 30px); }
+  td.act { width: 30px; text-align: center; }
   .rbtn {
     background: none; border: none; cursor: pointer;
-    font-size: 16px; padding: 2px 5px; border-radius: 2px; line-height: 1;
+    font-size: 14px; padding: 2px 4px; border-radius: 2px; line-height: 1;
   }
   .rbtn.del { color: var(--vscode-errorForeground); }
   .rbtn.del:hover { background: var(--vscode-toolbar-hoverBackground); }
+  .table-toolbar {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
   #addRow {
-    background: none; border: 1px dashed var(--vscode-panel-border);
+    background: none; border: 1px solid var(--vscode-panel-border);
     color: var(--vscode-descriptionForeground); cursor: pointer;
-    padding: 5px 12px; font-size: 12px; border-radius: 2px; width: 100%;
+    padding: 3px 10px; font-size: 11px; border-radius: 2px;
   }
   #addRow:hover { background: var(--vscode-toolbar-hoverBackground); }
+  #toggleImport {
+    background: none; border: 1px solid var(--vscode-panel-border);
+    color: var(--vscode-descriptionForeground); cursor: pointer;
+    padding: 3px 10px; font-size: 11px; border-radius: 2px;
+  }
+  #toggleImport:hover { background: var(--vscode-toolbar-hoverBackground); }
+  #importBlock { display: none; margin-top: 8px; }
+  #importBlock.open { display: block; }
   #importArea {
-    width: 100%; margin-top: 6px; padding: 6px 8px;
+    width: 100%; padding: 6px 8px;
     background: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     border: 1px solid var(--vscode-input-border, #3c3c3c);
     border-radius: 2px; font-family: var(--vscode-editor-font-family, monospace);
-    font-size: 12px; resize: vertical;
+    font-size: 12px; resize: vertical; margin-bottom: 4px;
   }
   #importBtn {
-    margin-top: 4px; margin-bottom: 8px;
-    padding: 3px 12px; background: var(--vscode-button-secondaryBackground);
+    padding: 3px 10px; background: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
-    border: none; border-radius: 2px; font-size: 12px; cursor: pointer;
+    border: none; border-radius: 2px; font-size: 11px; cursor: pointer;
   }
   #importBtn:hover { background: var(--vscode-button-secondaryHoverBackground); }
   .actions {
-    display: flex; gap: 8px; margin-top: 24px; padding-top: 16px;
-    border-top: 1px solid var(--vscode-panel-border);
+    display: flex; gap: 8px; margin-top: 14px;
   }
   .actions .spacer { flex: 1; }
   #deleteBtn {
@@ -303,27 +326,30 @@ function buildHtml(): string {
       Select a profile or create a new one
     </div>
     <div class="editor-content" id="editorContent">
-      <div id="activeBadge" class="badge inactive">No active profile</div>
-
-      <div class="section">
-        <label for="profileName">Profile Name</label>
-        <input type="text" id="profileName" placeholder="e.g. production, staging" />
+      <div class="card">
+        <div class="card-header">Profile</div>
+        <div class="profile-header">
+          <input type="text" id="profileName" placeholder="Profile name" />
+          <span id="activeBadge" class="active-pill inactive">Not active</span>
+        </div>
       </div>
 
-      <div class="section">
-        <label>Environment Variables</label>
+      <div class="card">
+        <div class="card-header">Environment Variables</div>
         <table>
           <thead>
             <tr><th>Name</th><th>Value</th><th class="act"></th></tr>
           </thead>
           <tbody id="envBody"></tbody>
         </table>
-        <details>
-          <summary>Import from bash</summary>
-          <textarea id="importArea" rows="6" placeholder="Paste export lines, one per line line"></textarea>
+        <div class="table-toolbar">
+          <button id="addRow">+ Add</button>
+          <button id="toggleImport">Import bash</button>
+        </div>
+        <div id="importBlock">
+          <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line"></textarea>
           <button id="importBtn">Import</button>
-        </details>
-        <button id="addRow">+ Add Variable</button>
+        </div>
       </div>
 
       <div class="actions">
@@ -445,11 +471,13 @@ function rebuildSidebar(keepName) {
 function updateBadge() {
   var b = document.getElementById('activeBadge');
   if (activeProfileName) {
-    b.textContent = '\\u25cf Active: ' + activeProfileName;
-    b.className = 'badge';
+    b.textContent = '\\u25cf ' + activeProfileName;
+    b.title = 'Active profile';
+    b.className = 'active-pill';
   } else {
-    b.textContent = 'No active profile';
-    b.className = 'badge inactive';
+    b.textContent = 'Not active';
+    b.title = '';
+    b.className = 'active-pill inactive';
   }
 }
 
@@ -546,6 +574,15 @@ document.getElementById('envBody').addEventListener('click', function(e) {
 document.getElementById('addRow').addEventListener('click', function() {
   rows.push({ name: '', value: '' });
   renderTable();
+});
+
+// ── Event: Toggle import block ───────────────────────────
+document.getElementById('toggleImport').addEventListener('click', function() {
+  var b = document.getElementById('importBlock');
+  b.classList.toggle('open');
+  if (b.classList.contains('open')) {
+    document.getElementById('importArea').focus();
+  }
 });
 
 // ── Event: Import from bash ──────────────────────────────
