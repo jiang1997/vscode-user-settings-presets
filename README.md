@@ -1,4 +1,4 @@
-# Claude Profile Manager
+# Claude Code Profile Manager
 
 A VS Code extension to manage multiple Claude Code API profiles and switch between them without manually editing `settings.json`.
 
