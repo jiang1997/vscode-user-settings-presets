@@ -424,10 +424,12 @@ function loadProfile(profile) {
   });
   renderTable();
   document.getElementById('deleteBtn').disabled = false;
-  document.getElementById('activateBtn').disabled = false;
+  var isActive = profile.name === activeProfileName;
+  document.getElementById('activateBtn').disabled = isActive;
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('editorContent').classList.add('visible');
   rebuildSidebar(profile.name);
+  updateBadge();
 }
 
 // ── Default template vars ────────────────────────────────
@@ -462,13 +464,14 @@ function rebuildSidebar(keepName) {
 // ── Update active badge ──────────────────────────────────
 function updateBadge() {
   var b = document.getElementById('activeBadge');
-  if (activeProfileName) {
-    b.textContent = '\\u25cf ' + activeProfileName;
-    b.title = 'Active profile';
+  var isActive = activeProfileName && currentProfileName === activeProfileName;
+  if (isActive) {
+    b.textContent = '\\u25cf Active';
+    b.title = 'This profile is currently active';
     b.className = 'active-pill';
   } else {
     b.textContent = 'Not active';
-    b.title = '';
+    b.title = 'Click Activate to switch to this profile';
     b.className = 'active-pill inactive';
   }
 }
