@@ -15,15 +15,6 @@ Open via **Command Palette** (`Ctrl+Shift+P` → `Claude Code Profile: Manage Pr
 - **Environment Variables card** — editable table of name/value pairs. Click `+ Add` for a new row, `✕` to remove.
 - **Parse from bash snippet** — paste `export VAR=value` lines and click Import to fill the table.
 
-### Actions
-
-| Button | What it does |
-|--------|-------------|
-| **Save** | Persists the current profile without changing which profile is active |
-| **Activate** | Switches to this profile — writes its variables to `claudeCode.environmentVariables` |
-| **Delete** | Removes the profile after confirmation. If it was active, clears environment variables |
-| **+ New Profile** | Creates a new profile with common Claude Code variable names as a template |
-
 ## First Launch
 
 If you already have `claudeCode.environmentVariables` configured in your `settings.json`, the extension automatically imports them as a **Default** profile.
