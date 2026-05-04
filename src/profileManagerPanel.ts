@@ -339,7 +339,7 @@ function buildHtml(): string {
         </div>
         <div id="importBlock">
           <label>Import from bash snippet</label>
-          <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line"></textarea>
+          <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line&#10;export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic&#10;export ANTHROPIC_AUTH_TOKEN=sk-xxx&#10;export ANTHROPIC_MODEL=deepseek-v4-pro[1m]"></textarea>
           <button id="importBtn">Import</button>
         </div>
       </div>
