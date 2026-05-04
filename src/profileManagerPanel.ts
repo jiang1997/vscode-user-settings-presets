@@ -261,14 +261,7 @@ function buildHtml(): string {
     padding: 3px 10px; font-size: 11px; border-radius: 2px;
   }
   #addRow:hover { background: var(--vscode-toolbar-hoverBackground); }
-  #toggleImport {
-    background: none; border: 1px solid var(--vscode-panel-border);
-    color: var(--vscode-descriptionForeground); cursor: pointer;
-    padding: 3px 10px; font-size: 11px; border-radius: 2px;
-  }
-  #toggleImport:hover { background: var(--vscode-toolbar-hoverBackground); }
-  #importBlock { display: none; margin-top: 8px; }
-  #importBlock.open { display: block; }
+  #importBlock { margin-top: 8px; }
   #importArea {
     width: 100%; padding: 6px 8px;
     background: var(--vscode-input-background);
@@ -343,9 +336,9 @@ function buildHtml(): string {
         </table>
         <div class="table-toolbar">
           <button id="addRow">+ Add</button>
-          <button id="toggleImport">Import from bash snippet</button>
         </div>
         <div id="importBlock">
+          <label>Import from bash snippet</label>
           <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line"></textarea>
           <button id="importBtn">Import</button>
         </div>
@@ -573,15 +566,6 @@ document.getElementById('envBody').addEventListener('click', function(e) {
 document.getElementById('addRow').addEventListener('click', function() {
   rows.push({ name: '', value: '' });
   renderTable();
-});
-
-// ── Event: Toggle import block ───────────────────────────
-document.getElementById('toggleImport').addEventListener('click', function() {
-  var b = document.getElementById('importBlock');
-  b.classList.toggle('open');
-  if (b.classList.contains('open')) {
-    document.getElementById('importArea').focus();
-  }
 });
 
 // ── Event: Import from bash ──────────────────────────────
