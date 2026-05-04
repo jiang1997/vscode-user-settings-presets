@@ -77,19 +77,14 @@ export class ProfileManagerPanel {
         break;
       }
 
-      case 'saveAndActivate': {
-        if (!msg.profile) return;
+      case 'activate': {
+        if (!msg.profileName) return;
         const profiles = loadProfiles(this._context);
-        const idx = profiles.findIndex(p => p.name === msg.profile!.name);
-        if (idx >= 0) {
-          profiles[idx] = msg.profile;
-        } else {
-          profiles.push(msg.profile);
-        }
-        await this._context.globalState.update(PROFILES_KEY, profiles);
-        await this._context.globalState.update(SELECTED_PROFILE_KEY, msg.profile.name);
-        writeEnvVars(msg.profile.envVars);
-        updateStatusBar(this._statusBarItem, msg.profile.name);
+        const profile = profiles.find(p => p.name === msg.profileName);
+        if (!profile) return;
+        await this._context.globalState.update(SELECTED_PROFILE_KEY, profile.name);
+        writeEnvVars(profile.envVars);
+        updateStatusBar(this._statusBarItem, profile.name);
         this.refresh();
         break;
       }
@@ -201,7 +196,7 @@ function buildHtml(): string {
     color: var(--vscode-errorForeground);
   }
   #deleteBtn:hover { background: var(--vscode-toolbar-hoverBackground); }
-  #deleteBtn:disabled { opacity: 0.4; cursor: default; }
+  #deleteBtn:disabled, #activateBtn:disabled { opacity: 0.4; cursor: default; }
   .ev-name, .ev-value, #profileName {
     width: 100%; padding: 5px 8px;
     background: var(--vscode-input-background);
@@ -268,11 +263,11 @@ function buildHtml(): string {
     color: var(--vscode-button-secondaryForeground);
   }
   #saveBtn:hover { background: var(--vscode-button-secondaryHoverBackground); }
-  #saveActivateBtn {
+  #activateBtn {
     background: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
   }
-  #saveActivateBtn:hover { background: var(--vscode-button-hoverBackground); }
+  #activateBtn:hover { background: var(--vscode-button-hoverBackground); }
 </style>
 </head>
 <body>
@@ -313,7 +308,7 @@ function buildHtml(): string {
 
 <div class="actions">
   <button id="saveBtn" class="btn">Save</button>
-  <button id="saveActivateBtn" class="btn">Save &amp; Activate</button>
+  <button id="activateBtn" class="btn" disabled>Activate</button>
 </div>
 
 <script>
@@ -386,6 +381,7 @@ function loadProfile(profile) {
   });
   renderTable();
   document.getElementById('deleteBtn').disabled = false;
+  document.getElementById('activateBtn').disabled = false;
 }
 
 // ── Default template vars ────────────────────────────────
@@ -467,6 +463,7 @@ function clearForm() {
   rows = defaultVars();
   renderTable();
   document.getElementById('deleteBtn').disabled = true;
+  document.getElementById('activateBtn').disabled = true;
   document.getElementById('profileSelect').value = '';
 }
 
@@ -552,11 +549,10 @@ document.getElementById('saveBtn').addEventListener('click', function() {
   vscode.postMessage({ command: 'save', profile: { name: name, envVars: collect() } });
 });
 
-// ── Event: Save & Activate ───────────────────────────────
-document.getElementById('saveActivateBtn').addEventListener('click', function() {
-  var name = document.getElementById('profileName').value.trim();
-  if (!name) { document.getElementById('profileName').focus(); return; }
-  vscode.postMessage({ command: 'saveAndActivate', profile: { name: name, envVars: collect() } });
+// ── Event: Activate ──────────────────────────────────────
+document.getElementById('activateBtn').addEventListener('click', function() {
+  if (!currentProfileName) return;
+  vscode.postMessage({ command: 'activate', profileName: currentProfileName });
 });
 
 // ── Start: tell extension we're ready ────────────────────
