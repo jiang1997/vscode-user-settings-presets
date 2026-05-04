@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { ApiProfile, EnvVar, PROFILES_KEY, SELECTED_PROFILE_KEY } from './types';
-import { ProfileTreeItem, ProfileTreeProvider, loadProfiles } from './profileTreeProvider';
+import { ApiProfile, EnvVar, loadProfiles, PROFILES_KEY, SELECTED_PROFILE_KEY } from './types';
+import { ProfileTreeItem, ProfileTreeProvider } from './profileTreeProvider';
 import { ProfileEditorPanel } from './profileEditorPanel';
 
 export function activate(context: vscode.ExtensionContext) {
