@@ -19,7 +19,7 @@
       {
         "command": "claudeSettingManager.manageProfiles",
         "title": "Manage Profiles",
-        "category": "Claude Setting"
+        "category": "Claude Code Profile"
       }
     ],
     "configuration": [
