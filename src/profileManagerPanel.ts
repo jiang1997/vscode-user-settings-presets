@@ -344,7 +344,7 @@ function buildHtml(): string {
         </table>
         <div class="table-toolbar">
           <button id="addRow">+ Add</button>
-          <button id="toggleImport">Import bash</button>
+          <button id="toggleImport">Import from bash snippet</button>
         </div>
         <div id="importBlock">
           <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line"></textarea>
