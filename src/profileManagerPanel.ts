@@ -57,7 +57,7 @@ export class ProfileManagerPanel {
     });
   }
 
-  private async _handleMessage(msg: { command: string; profile?: ApiProfile; profileName?: string }) {
+  private async _handleMessage(msg: { command: string; profile?: ApiProfile; profileName?: string; oldName?: string }) {
     switch (msg.command) {
       case 'ready':
         this.refresh();
@@ -66,13 +66,23 @@ export class ProfileManagerPanel {
       case 'save': {
         if (!msg.profile) return;
         const profiles = loadProfiles(this._context);
-        const idx = profiles.findIndex(p => p.name === msg.profile!.name);
+        const oldName: string | undefined = msg.oldName;
+        const idx = oldName
+          ? profiles.findIndex(p => p.name === oldName)
+          : profiles.findIndex(p => p.name === msg.profile!.name);
         if (idx >= 0) {
           profiles[idx] = msg.profile;
         } else {
           profiles.push(msg.profile);
         }
         await this._context.globalState.update(PROFILES_KEY, profiles);
+        if (oldName && oldName !== msg.profile.name) {
+          const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
+          if (activeName === oldName) {
+            await this._context.globalState.update(SELECTED_PROFILE_KEY, msg.profile.name);
+            updateStatusBar(this._statusBarItem, msg.profile.name);
+          }
+        }
         this.refresh();
         break;
       }
@@ -360,6 +370,7 @@ var profiles = [];
 var activeProfileName = null;
 var rows = [];
 var currentProfileName = '';
+var originalProfileName = '';
 
 // ── Render env var table ────────────────────────────────
 function renderTable() {
@@ -418,6 +429,7 @@ function collect() {
 // ── Load profile into form ───────────────────────────────
 function loadProfile(profile) {
   currentProfileName = profile.name;
+  originalProfileName = profile.name;
   document.getElementById('profileName').value = profile.name;
   rows = profile.envVars.map(function(ev) {
     return { name: ev.name, value: ev.value };
@@ -506,6 +518,7 @@ function handleInit(data) {
 // ── Clear the form ───────────────────────────────────────
 function clearForm() {
   currentProfileName = '';
+  originalProfileName = '';
   document.getElementById('profileName').value = '';
   rows = defaultVars();
   renderTable();
@@ -599,7 +612,8 @@ document.getElementById('importBtn').addEventListener('click', function() {
 document.getElementById('saveBtn').addEventListener('click', function() {
   var name = document.getElementById('profileName').value.trim();
   if (!name) { document.getElementById('profileName').focus(); return; }
-  vscode.postMessage({ command: 'save', profile: { name: name, envVars: collect() } });
+  var msg = { command: 'save', profile: { name: name, envVars: collect() }, oldName: originalProfileName };
+  vscode.postMessage(msg);
 });
 
 // ── Event: Activate ──────────────────────────────────────
