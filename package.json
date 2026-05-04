@@ -11,11 +11,18 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:claudeProfiles"
+    "onCommand:claudeSettingManager.manageProfiles",
+    "onCommand:claudeSettingManager.addProfile",
+    "onCommand:claudeSettingManager.switchProfile"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "claudeSettingManager.manageProfiles",
+        "title": "Claude Setting: Manage Profiles",
+        "category": "Claude Setting"
+      },
       {
         "command": "claudeSettingManager.addProfile",
         "title": "Claude Setting: Add Profile",
@@ -24,21 +31,6 @@
       {
         "command": "claudeSettingManager.switchProfile",
         "title": "Claude Setting: Switch Profile",
-        "category": "Claude Setting"
-      },
-      {
-        "command": "claudeSettingManager.editProfile",
-        "title": "Edit",
-        "category": "Claude Setting"
-      },
-      {
-        "command": "claudeSettingManager.deleteProfile",
-        "title": "Delete",
-        "category": "Claude Setting"
-      },
-      {
-        "command": "claudeSettingManager.activateProfile",
-        "title": "Activate Profile",
         "category": "Claude Setting"
       }
     ],
@@ -76,44 +68,7 @@
           }
         }
       }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "claudeProfiles",
-          "title": "Claude Profiles",
-          "icon": "$(account)"
-        }
-      ]
-    },
-    "views": {
-      "claudeProfiles": [
-        {
-          "id": "claudeProfiles",
-          "name": "Profiles"
-        }
-      ]
-    },
-    "menus": {
-      "view/item/context": [
-        {
-          "command": "claudeSettingManager.editProfile",
-          "when": "view == claudeProfiles && viewItem == claudeProfile",
-          "group": "inline"
-        },
-        {
-          "command": "claudeSettingManager.deleteProfile",
-          "when": "view == claudeProfiles && viewItem == claudeProfile"
-        }
-      ],
-      "view/title": [
-        {
-          "command": "claudeSettingManager.addProfile",
-          "when": "view == claudeProfiles",
-          "group": "navigation"
-        }
-      ]
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
