@@ -348,7 +348,7 @@ function buildHtml(): string {
           <button id="addRow">+ Add</button>
         </div>
         <div id="importBlock">
-          <label>Parse variables from bash snippet</label>
+          <label>Parse from bash snippet</label>
           <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line&#10;export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic&#10;export ANTHROPIC_AUTH_TOKEN=sk-xxx&#10;export ANTHROPIC_MODEL=deepseek-v4-pro[1m]"></textarea>
           <button id="importBtn">Import</button>
         </div>
@@ -584,7 +584,7 @@ document.getElementById('addRow').addEventListener('click', function() {
   renderTable();
 });
 
-// ── Event: Import from bash ──────────────────────────────
+// ── Event: Parse from bash snippet ───────────────────────
 document.getElementById('importBtn').addEventListener('click', function() {
   var text = document.getElementById('importArea').value;
   if (!text.trim()) return;
