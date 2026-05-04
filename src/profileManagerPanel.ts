@@ -253,9 +253,8 @@ function buildHtml(): string {
   }
   .rbtn.del { color: var(--vscode-errorForeground); }
   .rbtn.del:hover { background: var(--vscode-toolbar-hoverBackground); }
-  .table-toolbar {
-    display: flex; gap: 6px; margin-top: 8px;
-  }
+  .table-toolbar { margin-top: 8px; }
+  .table-toolbar button { display: block; margin-bottom: 4px; }
   #addRow {
     background: none; border: 1px solid var(--vscode-panel-border);
     color: var(--vscode-descriptionForeground); cursor: pointer;
