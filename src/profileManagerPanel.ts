@@ -155,16 +155,52 @@ function buildHtml(): string {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    padding: 20px 24px;
     color: var(--vscode-editor-foreground);
     font-family: var(--vscode-font-family);
-    font-size: 13px;
+    font-size: 13px; height: 100vh; overflow: hidden;
   }
+  .layout { display: flex; height: 100vh; }
+  .sidebar {
+    width: 180px; min-width: 140px; border-right: 1px solid var(--vscode-panel-border);
+    display: flex; flex-direction: column; background: var(--vscode-sideBar-background);
+  }
+  .sidebar-header {
+    padding: 12px 12px 8px; font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--vscode-sideBarTitle-foreground);
+  }
+  .profile-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+  .profile-item {
+    padding: 6px 8px; border-radius: 2px; cursor: pointer;
+    display: flex; align-items: center; gap: 4px; font-size: 13px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .profile-item:hover { background: var(--vscode-list-hoverBackground); }
+  .profile-item.active { background: var(--vscode-list-activeSelectionBackground); color: var(--vscode-list-activeSelectionForeground); }
+  .profile-item .dot { font-size: 10px; flex-shrink: 0; }
+  .sidebar-footer { padding: 8px; border-top: 1px solid var(--vscode-panel-border); }
+  #newBtn {
+    width: 100%; padding: 4px 8px; background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground); border: none; border-radius: 2px;
+    font-size: 12px; cursor: pointer;
+  }
+  #newBtn:hover { background: var(--vscode-button-hoverBackground); }
+
+  .editor {
+    flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .empty-editor {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--vscode-descriptionForeground); font-size: 14px;
+  }
+  .editor-content { display: none; flex-direction: column; flex: 1; }
+  .editor-content.visible { display: flex; }
+
   .badge {
     display: inline-block; padding: 2px 10px; border-radius: 10px;
     font-size: 12px; font-weight: 600; margin-bottom: 16px;
     background: var(--vscode-badge-background);
-    color: var(--vscode-badge-foreground);
+    color: var(--vscode-badge-foreground); align-self: flex-start;
   }
   .badge.inactive { opacity: 0.5; }
   .section { margin-bottom: 16px; }
@@ -172,31 +208,6 @@ function buildHtml(): string {
     display: block; margin-bottom: 4px; font-weight: 600;
     color: var(--vscode-foreground);
   }
-  .toolbar {
-    display: flex; gap: 8px; align-items: center; margin-bottom: 16px;
-  }
-  .toolbar select {
-    flex: 1; padding: 5px 8px;
-    background: var(--vscode-dropdown-background);
-    color: var(--vscode-dropdown-foreground);
-    border: 1px solid var(--vscode-dropdown-border);
-    border-radius: 2px; font-family: var(--vscode-font-family); font-size: 13px;
-  }
-  .toolbar button {
-    padding: 5px 12px; border-radius: 2px; font-size: 12px;
-    cursor: pointer; border: none; white-space: nowrap;
-  }
-  #newBtn {
-    background: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-  }
-  #newBtn:hover { background: var(--vscode-button-hoverBackground); }
-  #deleteBtn {
-    background: none; border: 1px solid var(--vscode-errorForeground);
-    color: var(--vscode-errorForeground);
-  }
-  #deleteBtn:hover { background: var(--vscode-toolbar-hoverBackground); }
-  #deleteBtn:disabled, #activateBtn:disabled { opacity: 0.4; cursor: default; }
   .ev-name, .ev-value, #profileName {
     width: 100%; padding: 5px 8px;
     background: var(--vscode-input-background);
@@ -250,10 +261,16 @@ function buildHtml(): string {
   }
   #importBtn:hover { background: var(--vscode-button-secondaryHoverBackground); }
   .actions {
-    display: flex; justify-content: flex-end; gap: 8px;
-    margin-top: 24px; padding-top: 16px;
+    display: flex; gap: 8px; margin-top: 24px; padding-top: 16px;
     border-top: 1px solid var(--vscode-panel-border);
   }
+  .actions .spacer { flex: 1; }
+  #deleteBtn {
+    background: none; border: 1px solid var(--vscode-errorForeground);
+    color: var(--vscode-errorForeground);
+  }
+  #deleteBtn:hover { background: var(--vscode-toolbar-hoverBackground); }
+  #deleteBtn:disabled, #activateBtn:disabled { opacity: 0.4; cursor: default; }
   .btn {
     padding: 5px 16px; border-radius: 2px; font-size: 13px;
     cursor: pointer; border: 1px solid transparent;
@@ -272,43 +289,51 @@ function buildHtml(): string {
 </head>
 <body>
 
-<div id="activeBadge" class="badge inactive">No active profile</div>
-
-<div class="section">
-  <label>Profile</label>
-  <div class="toolbar">
-    <select id="profileSelect">
-      <option value="">-- Select a profile --</option>
-    </select>
-    <button id="newBtn">+ New</button>
-    <button id="deleteBtn" disabled>Delete</button>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-header">Profiles</div>
+    <div class="profile-list" id="profileList"></div>
+    <div class="sidebar-footer">
+      <button id="newBtn">+ New Profile</button>
+    </div>
   </div>
-</div>
 
-<div class="section">
-  <label for="profileName">Profile Name</label>
-  <input type="text" id="profileName" placeholder="e.g. production, staging" />
-</div>
+  <div class="editor">
+    <div class="empty-editor" id="emptyState">
+      Select a profile or create a new one
+    </div>
+    <div class="editor-content" id="editorContent">
+      <div id="activeBadge" class="badge inactive">No active profile</div>
 
-<div class="section">
-  <label>Environment Variables</label>
-  <table>
-    <thead>
-      <tr><th>Name</th><th>Value</th><th class="act"></th></tr>
-    </thead>
-    <tbody id="envBody"></tbody>
-  </table>
-  <details>
-    <summary>Import from bash</summary>
-    <textarea id="importArea" rows="6" placeholder="Paste export lines, one per line line"></textarea>
-    <button id="importBtn">Import</button>
-  </details>
-  <button id="addRow">+ Add Variable</button>
-</div>
+      <div class="section">
+        <label for="profileName">Profile Name</label>
+        <input type="text" id="profileName" placeholder="e.g. production, staging" />
+      </div>
 
-<div class="actions">
-  <button id="saveBtn" class="btn">Save</button>
-  <button id="activateBtn" class="btn" disabled>Activate</button>
+      <div class="section">
+        <label>Environment Variables</label>
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Value</th><th class="act"></th></tr>
+          </thead>
+          <tbody id="envBody"></tbody>
+        </table>
+        <details>
+          <summary>Import from bash</summary>
+          <textarea id="importArea" rows="6" placeholder="Paste export lines, one per line line"></textarea>
+          <button id="importBtn">Import</button>
+        </details>
+        <button id="addRow">+ Add Variable</button>
+      </div>
+
+      <div class="actions">
+        <button id="deleteBtn" class="btn" disabled>Delete</button>
+        <span class="spacer"></span>
+        <button id="saveBtn" class="btn">Save</button>
+        <button id="activateBtn" class="btn" disabled>Activate</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -382,6 +407,9 @@ function loadProfile(profile) {
   renderTable();
   document.getElementById('deleteBtn').disabled = false;
   document.getElementById('activateBtn').disabled = false;
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('editorContent').classList.add('visible');
+  rebuildSidebar(profile.name);
 }
 
 // ── Default template vars ────────────────────────────────
@@ -396,23 +424,21 @@ function defaultVars() {
   ];
 }
 
-// ── Rebuild dropdown from profiles list ──────────────────
-function rebuildSelect(keepName) {
-  var sel = document.getElementById('profileSelect');
-  sel.textContent = '';
-  var opt = document.createElement('option');
-  opt.value = '';
-  opt.textContent = '-- Select a profile --';
-  sel.appendChild(opt);
-  var found = false;
+// ── Rebuild profile list in sidebar ──────────────────────
+function rebuildSidebar(keepName) {
+  var list = document.getElementById('profileList');
+  list.textContent = '';
   profiles.forEach(function(p) {
-    opt = document.createElement('option');
-    opt.value = p.name;
-    opt.textContent = p.name + (p.name === activeProfileName ? ' (active)' : '');
-    sel.appendChild(opt);
-    if (p.name === keepName) found = true;
+    var div = document.createElement('div');
+    div.className = 'profile-item' + (p.name === keepName ? ' active' : '');
+    div.dataset.name = p.name;
+    var dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.textContent = p.name === activeProfileName ? '\\u25cf' : '\\u25cb';
+    div.appendChild(dot);
+    div.appendChild(document.createTextNode(p.name));
+    list.appendChild(div);
   });
-  sel.value = found ? keepName : '';
 }
 
 // ── Update active badge ──────────────────────────────────
@@ -439,19 +465,17 @@ function handleInit(data) {
     // currently selected profile was deleted
     keepName = activeProfileName || (profiles.length > 0 ? profiles[0].name : '');
   }
-  rebuildSelect(keepName);
+  rebuildSidebar(keepName);
 
   if (keepName) {
     var p = profiles.find(function(p) { return p.name === keepName; });
     if (p) loadProfile(p);
   } else if (profiles.length > 0) {
-    // auto-select the active profile or first one
     var first = activeProfileName
       ? profiles.find(function(p) { return p.name === activeProfileName; })
       : profiles[0];
     if (first) loadProfile(first);
   } else {
-    // no profiles at all
     clearForm();
   }
 }
@@ -464,7 +488,9 @@ function clearForm() {
   renderTable();
   document.getElementById('deleteBtn').disabled = true;
   document.getElementById('activateBtn').disabled = true;
-  document.getElementById('profileSelect').value = '';
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('editorContent').classList.remove('visible');
+  rebuildSidebar('');
 }
 
 // ── Event: messages from extension ───────────────────────
@@ -475,17 +501,21 @@ window.addEventListener('message', function(e) {
   }
 });
 
-// ── Event: dropdown change ───────────────────────────────
-document.getElementById('profileSelect').addEventListener('change', function() {
-  var name = this.value;
-  if (!name) { clearForm(); return; }
+// ── Event: sidebar profile click ─────────────────────────
+document.getElementById('profileList').addEventListener('click', function(e) {
+  var el = /** @type {HTMLElement} */ (e.target);
+  var item = el.closest('.profile-item');
+  if (!item) return;
+  var name = item.dataset.name;
   var p = profiles.find(function(p) { return p.name === name; });
   if (p) loadProfile(p);
 });
 
-// ── Event: + New button ──────────────────────────────────
+// ── Event: + New Profile button ──────────────────────────
 document.getElementById('newBtn').addEventListener('click', function() {
   clearForm();
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('editorContent').classList.add('visible');
   document.getElementById('profileName').focus();
 });
 
