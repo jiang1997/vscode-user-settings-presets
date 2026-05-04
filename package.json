@@ -11,9 +11,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:claudeSettingManager.manageProfiles",
-    "onCommand:claudeSettingManager.addProfile",
-    "onCommand:claudeSettingManager.switchProfile"
+    "onCommand:claudeSettingManager.manageProfiles"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -21,16 +19,6 @@
       {
         "command": "claudeSettingManager.manageProfiles",
         "title": "Claude Setting: Manage Profiles",
-        "category": "Claude Setting"
-      },
-      {
-        "command": "claudeSettingManager.addProfile",
-        "title": "Claude Setting: Add Profile",
-        "category": "Claude Setting"
-      },
-      {
-        "command": "claudeSettingManager.switchProfile",
-        "title": "Claude Setting: Switch Profile",
         "category": "Claude Setting"
       }
     ],

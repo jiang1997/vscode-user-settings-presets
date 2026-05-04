@@ -12,26 +12,11 @@ export function activate(context: vscode.ExtensionContext) {
   updateStatusBar(statusBarItem, activeProfile);
 
   // ── Manage Profiles ────────────────────────────────────────
-  const manageProfiles = vscode.commands.registerCommand('claudeSettingManager.manageProfiles', () => {
-    ProfileManagerPanel.show(context, statusBarItem);
-  });
-  context.subscriptions.push(manageProfiles);
-
-  // ── Aliases ────────────────────────────────────────────────
-  const aliases = [
-    'claudeSettingManager.addProfile',
-    'claudeSettingManager.switchProfile',
-    'claudeSettingManager.editProfile',
-    'claudeSettingManager.deleteProfile',
-    'claudeSettingManager.activateProfile',
-  ];
-  for (const cmd of aliases) {
-    context.subscriptions.push(
-      vscode.commands.registerCommand(cmd, () => {
-        ProfileManagerPanel.show(context, statusBarItem);
-      }),
-    );
-  }
+  context.subscriptions.push(
+    vscode.commands.registerCommand('claudeSettingManager.manageProfiles', () => {
+      ProfileManagerPanel.show(context, statusBarItem);
+    }),
+  );
 }
 
 export function deactivate() {}
