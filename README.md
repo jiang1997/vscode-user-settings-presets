@@ -2,30 +2,37 @@
 
 A VS Code extension to manage multiple Claude Code API profiles and switch between them without manually editing `settings.json`.
 
+![Screenshot](Screenshot%202026-05-05%20074606.png)
+
 ## Usage
 
-**Command Palette** → `Claude Setting: Manage Profiles` or click the active profile in the status bar.
+Open via **Command Palette** (`Ctrl+Shift+P` → `Claude Code Profile: Manage Profiles`) or click the active profile name in the status bar.
 
-The management page provides:
+### Managing Profiles
 
-- **Profile sidebar** — switch between saved profiles
-- **Environment variable editor** — add, edit, or remove variables for each profile
-- **Bash import** — paste `export VAR=value` lines to import variables
-- **Save** — persist edits without activating
-- **Activate** — write the profile's variables to `claudeCode.environmentVariables`
-- **Delete** — remove a profile
+- **Left sidebar** — lists all saved profiles. `●` marks the active one, `○` inactive ones. Click a profile to load its variables for editing.
+- **Profile card** — shows the profile name and whether it's currently active.
+- **Environment Variables card** — editable table of name/value pairs. Click `+ Add` for a new row, `✕` to remove.
+- **Parse from bash snippet** — paste `export VAR=value` lines and click Import to fill the table.
 
-## Settings
+### Actions
 
-| Key | Default | Purpose |
-|-----|---------|---------|
-| `claudeSettingManager.environmentVariableName` | `ANTHROPIC_BASE_URL` | (Legacy) No longer used |
+| Button | What it does |
+|--------|-------------|
+| **Save** | Persists the current profile without changing which profile is active |
+| **Activate** | Switches to this profile — writes its variables to `claudeCode.environmentVariables` |
+| **Delete** | Removes the profile after confirmation. If it was active, clears environment variables |
+| **+ New Profile** | Creates a new profile with common Claude Code variable names as a template |
+
+## First Launch
+
+If you already have `claudeCode.environmentVariables` configured in your `settings.json`, the extension automatically imports them as a **Default** profile.
 
 ## Build
 
 ```bash
 npm install
-npm run compile   # tsc -> out/
-npm test          # 14 unit tests
-npm run package   # vsce package -> .vsix
+npm run compile
+npm test          # 24 tests
+npm run package   # generates .vsix
 ```
