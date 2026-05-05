@@ -86,6 +86,10 @@ export class ProfileManagerPanel {
         if (!msg.profile) return;
         const profiles = loadProfiles(this._context);
         const oldName: string | undefined = msg.oldName;
+        const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
+        const savingActiveProfile = oldName
+          ? activeName === oldName
+          : activeName === msg.profile.name;
         const idx = oldName
           ? profiles.findIndex(p => p.name === oldName)
           : profiles.findIndex(p => p.name === msg.profile!.name);
@@ -94,13 +98,15 @@ export class ProfileManagerPanel {
         } else {
           profiles.push(msg.profile);
         }
+        if (savingActiveProfile) {
+          await writeEnvVars(msg.profile.envVars);
+        }
         await this._context.globalState.update(PROFILES_KEY, profiles);
-        if (oldName && oldName !== msg.profile.name) {
-          const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
-          if (activeName === oldName) {
-            await this._context.globalState.update(SELECTED_PROFILE_KEY, msg.profile.name);
-            updateStatusBar(this._statusBarItem, msg.profile.name);
-          }
+        if (savingActiveProfile && activeName !== msg.profile.name) {
+          await this._context.globalState.update(SELECTED_PROFILE_KEY, msg.profile.name);
+        }
+        if (savingActiveProfile) {
+          updateStatusBar(this._statusBarItem, msg.profile.name);
         }
         this.refresh();
         break;
@@ -111,8 +117,8 @@ export class ProfileManagerPanel {
         const profiles = loadProfiles(this._context);
         const profile = profiles.find(p => p.name === msg.profileName);
         if (!profile) return;
+        await writeEnvVars(profile.envVars);
         await this._context.globalState.update(SELECTED_PROFILE_KEY, profile.name);
-        writeEnvVars(profile.envVars);
         updateStatusBar(this._statusBarItem, profile.name);
         this.refresh();
 
@@ -139,11 +145,13 @@ export class ProfileManagerPanel {
         const idx = profiles.findIndex(p => p.name === msg.profileName);
         if (idx >= 0) {
           const removed = profiles.splice(idx, 1)[0];
-          await this._context.globalState.update(PROFILES_KEY, profiles);
           const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
           if (activeName === removed.name) {
+            await clearEnvVars();
+          }
+          await this._context.globalState.update(PROFILES_KEY, profiles);
+          if (activeName === removed.name) {
             await this._context.globalState.update(SELECTED_PROFILE_KEY, undefined);
-            clearEnvVars();
             updateStatusBar(this._statusBarItem, undefined);
           }
         }
