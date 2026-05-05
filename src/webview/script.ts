@@ -184,6 +184,21 @@ function handleInit(data: InitMessage): void {
   }
 }
 
+// ── Next available profile name ──────────────────────────
+
+function nextProfileName(): string {
+  let max = 0;
+  const re = /^profile-(\d+)$/;
+  for (const p of profiles) {
+    const m = p.name.match(re);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n > max) max = n;
+    }
+  }
+  return `profile-${max + 1}`;
+}
+
 // ── Clear the form ───────────────────────────────────────
 
 function clearForm(): void {
@@ -225,7 +240,12 @@ document.getElementById('newBtn')!.addEventListener('click', () => {
   clearForm();
   document.getElementById('emptyState')!.style.display = 'none';
   document.getElementById('editorContent')!.classList.add('visible');
+  const name = nextProfileName();
+  (document.getElementById('profileName') as HTMLInputElement).value = name;
+  currentProfileName = name;
+  originalProfileName = '';
   document.getElementById('profileName')!.focus();
+  document.getElementById('profileName')!.select();
 });
 
 // ── Event: Delete button ─────────────────────────────────
