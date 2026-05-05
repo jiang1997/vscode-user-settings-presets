@@ -8,3 +8,5 @@ src/**
 .git/**
 package-lock.json
 docs/**
+*.png
+*.vsix
