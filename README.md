@@ -2,7 +2,7 @@
 
 A VS Code extension to manage multiple Claude Code API profiles and switch between them without manually editing `settings.json`.
 
-![Screenshot](screenshot.png)
+![Screenshot](https://github.com/jiang1997/claude-code-profile-manager/raw/master/screenshot.png)
 
 ## Usage
 
