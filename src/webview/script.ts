@@ -102,6 +102,7 @@ function loadProfile(profile: ApiProfile): void {
   rows = profile.envVars.map((ev) => ({ name: ev.name, value: ev.value }));
   renderTable();
   document.getElementById('deleteBtn')!.disabled = false;
+  document.getElementById('activateBtn')!.disabled = false;
   document.getElementById('emptyState')!.style.display = 'none';
   document.getElementById('editorContent')!.classList.add('visible');
   rebuildSidebar(profile.name);
