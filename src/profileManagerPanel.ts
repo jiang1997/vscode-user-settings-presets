@@ -57,7 +57,7 @@ export class ProfileManagerPanel {
       vscode.Uri.file(path.join(mediaDir, 'style.css')),
     );
     const jsUri = this._panel.webview.asWebviewUri(
-      vscode.Uri.file(path.join(mediaDir, 'script.js')),
+      vscode.Uri.file(path.join(this._context.extensionPath, 'out', 'webview', 'script.js')),
     );
 
     html = html.replace('{{CSS_URI}}', cssUri.toString());

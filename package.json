@@ -64,9 +64,11 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "test": "npm run compile && mocha out/test/**/*.test.js",
+    "compile": "tsc -p ./ && npm run compile:webview",
+    "compile:webview": "esbuild src/webview/script.ts --bundle --outfile=out/webview/script.js --format=iife",
     "watch": "tsc -watch -p ./",
+    "watch:webview": "esbuild src/webview/script.ts --bundle --outfile=out/webview/script.js --format=iife --watch",
+    "test": "npm run compile && mocha out/test/**/*.test.js",
     "package": "vsce package"
   },
   "devDependencies": {
@@ -74,6 +76,7 @@
     "@types/node": "^18.19.130",
     "@types/vscode": "^1.75.0",
     "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.28.0",
     "mocha": "^11.7.5",
     "typescript": "^5.3.0"
   }
