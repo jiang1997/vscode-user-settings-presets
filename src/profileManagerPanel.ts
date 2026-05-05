@@ -115,6 +115,14 @@ export class ProfileManagerPanel {
         writeEnvVars(profile.envVars);
         updateStatusBar(this._statusBarItem, profile.name);
         this.refresh();
+
+        const reload = await vscode.window.showInformationMessage(
+          `Profile "${profile.name}" activated. Reload the window to apply changes to Claude Code.`,
+          'Reload Window',
+        );
+        if (reload === 'Reload Window') {
+          vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
         break;
       }
 
