@@ -117,7 +117,7 @@ export class ProfileManagerPanel {
         this.refresh();
 
         const reload = await vscode.window.showInformationMessage(
-          `Profile "${profile.name}" activated. Reload the window to apply changes to Claude Code.`,
+          `Profile "${profile.name}" activated. Reload the window to apply changes to settings.json.`,
           'Reload Window',
         );
         if (reload === 'Reload Window') {
