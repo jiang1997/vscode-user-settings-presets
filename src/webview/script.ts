@@ -296,6 +296,8 @@ document.getElementById('saveBtn')!.addEventListener('click', () => {
     profile: { name, envVars: collect() },
     oldName: originalProfileName,
   });
+  currentProfileName = name;
+  originalProfileName = name;
 });
 
 // ── Event: Activate ──────────────────────────────────────
