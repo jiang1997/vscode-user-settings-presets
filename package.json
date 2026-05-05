@@ -2,7 +2,7 @@
   "name": "claude-code-profile-manager",
   "displayName": "Claude Code Profile Manager",
   "description": "A VS Code extension to manage multiple Claude Code API profiles and switch between them without manually editing settings.json.",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "publisher": "jiang1997",
   "engines": {
     "vscode": "^1.75.0"
