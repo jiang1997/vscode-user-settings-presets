@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{CSS_URI}}">
+</head>
+<body>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-header">Profiles</div>
+    <div class="profile-list" id="profileList"></div>
+    <div class="sidebar-footer">
+      <button id="newBtn">+ New Profile</button>
+    </div>
+  </div>
+
+  <div class="editor">
+    <div class="empty-editor" id="emptyState">
+      Select a profile or create a new one
+    </div>
+    <div class="editor-content" id="editorContent">
+      <div class="card">
+        <div class="card-header">Profile</div>
+        <div class="profile-header">
+          <input type="text" id="profileName" placeholder="Profile name" />
+          <span id="activeBadge" class="active-pill inactive">Not active</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Environment Variables</div>
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Value</th><th class="act"></th></tr>
+          </thead>
+          <tbody id="envBody"></tbody>
+        </table>
+        <div class="table-toolbar">
+          <button id="addRow">+ Add</button>
+        </div>
+        <div id="importBlock">
+          <label>Parse from bash snippet</label>
+          <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line&#10;export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic&#10;export ANTHROPIC_AUTH_TOKEN=sk-xxx&#10;export ANTHROPIC_MODEL=deepseek-v4-pro[1m]"></textarea>
+          <button id="importBtn">Import</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="deleteBtn" class="btn" disabled>Delete</button>
+        <span class="spacer"></span>
+        <button id="saveBtn" class="btn">Save</button>
+        <button id="activateBtn" class="btn" disabled>Activate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{JS_URI}}"></script>
+</body>
+</html>
