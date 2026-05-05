@@ -2,6 +2,8 @@
 
 A VS Code extension to manage multiple Claude Code API profiles and switch between them without manually editing `settings.json`.
 
+> **Important:** This extension operates exclusively on VS Code's own `settings.json` — it reads and writes only the `claudeCode.environmentVariables` setting within that file. It does **not** read, modify, or interact with any Claude Code configuration files (e.g., `~/.claude/settings.json`, `CLAUDE.md`, `.claude/settings.local.json`, or any other Claude Code internal files).
+
 [![Latest Release](https://img.shields.io/github/v/release/jiang1997/claude-code-profile-manager?label=download&color=007ACC)](https://github.com/jiang1997/claude-code-profile-manager/releases/latest)
 
 ![Screenshot](https://github.com/jiang1997/claude-code-profile-manager/raw/master/screenshot.png)
