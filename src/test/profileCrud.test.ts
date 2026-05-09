@@ -1,9 +1,9 @@
 import * as assert from 'assert';
-import { ApiProfile, EnvVar } from '../types';
+import { SettingProfile } from '../types';
 
 // ── Pure-logic extracts from ProfileManagerPanel ──────────
 
-function upsertProfile(profiles: ApiProfile[], profile: ApiProfile, oldName?: string): ApiProfile[] {
+function upsertProfile(profiles: SettingProfile[], profile: SettingProfile, oldName?: string): SettingProfile[] {
   const idx = oldName
     ? profiles.findIndex(p => p.name === oldName)
     : profiles.findIndex(p => p.name === profile.name);
@@ -15,52 +15,47 @@ function upsertProfile(profiles: ApiProfile[], profile: ApiProfile, oldName?: st
   return profiles;
 }
 
-function deleteProfile(profiles: ApiProfile[], name: string): ApiProfile[] {
+function deleteProfile(profiles: SettingProfile[], name: string): SettingProfile[] {
   const idx = profiles.findIndex(p => p.name === name);
   if (idx >= 0) profiles.splice(idx, 1);
   return profiles;
 }
 
-function resolveActiveAfterDelete(profiles: ApiProfile[], activeName: string | undefined, deletedName: string): string | undefined {
+function resolveActiveAfterDelete(profiles: SettingProfile[], activeName: string | undefined, deletedName: string): string | undefined {
   if (activeName === deletedName) return undefined;
   return activeName;
 }
 
-function filterEmpty(envVars: EnvVar[]): EnvVar[] {
-  return envVars.filter(e => e.value !== '');
-}
-
 // ── Tests ─────────────────────────────────────────────────
 
-const sampleProfile: ApiProfile = {
+const sampleProfile: SettingProfile = {
   name: 'prod',
-  envVars: [
-    { name: 'ANTHROPIC_BASE_URL', value: 'https://api.example.com' },
-    { name: 'ANTHROPIC_AUTH_TOKEN', value: 'sk-123' },
-  ],
+  settingKey: 'claudeCode.environmentVariables',
+  value: [{ name: 'ANTHROPIC_BASE_URL', value: 'https://api.example.com' }],
 };
 
 describe('Profile CRUD', () => {
   describe('upsertProfile', () => {
     it('appends a new profile', () => {
-      const profiles: ApiProfile[] = [];
+      const profiles: SettingProfile[] = [];
       const result = upsertProfile(profiles, sampleProfile);
       assert.strictEqual(result.length, 1);
       assert.strictEqual(result[0].name, 'prod');
+      assert.strictEqual(result[0].settingKey, 'claudeCode.environmentVariables');
     });
 
     it('updates an existing profile by name', () => {
       const profiles = [JSON.parse(JSON.stringify(sampleProfile))];
-      const updated = { name: 'prod', envVars: [{ name: 'X', value: 'Y' }] };
+      const updated: SettingProfile = { name: 'prod', settingKey: 'python.defaultInterpreterPath', value: '/usr/bin/python3' };
       const result = upsertProfile(profiles, updated);
       assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].envVars.length, 1);
-      assert.strictEqual(result[0].envVars[0].name, 'X');
+      assert.strictEqual(result[0].settingKey, 'python.defaultInterpreterPath');
+      assert.strictEqual(result[0].value, '/usr/bin/python3');
     });
 
     it('updates by oldName when profile is renamed', () => {
       const profiles = [JSON.parse(JSON.stringify(sampleProfile))];
-      const renamed = { name: 'production', envVars: sampleProfile.envVars };
+      const renamed: SettingProfile = { name: 'production', settingKey: sampleProfile.settingKey, value: sampleProfile.value };
       const result = upsertProfile(profiles, renamed, 'prod');
       assert.strictEqual(result.length, 1);
       assert.strictEqual(result[0].name, 'production');
@@ -98,20 +93,6 @@ describe('Profile CRUD', () => {
 
     it('keeps undefined when nothing was active', () => {
       assert.strictEqual(resolveActiveAfterDelete([], undefined, 'prod'), undefined);
-    });
-  });
-
-  describe('filterEmpty for activation', () => {
-    it('excludes empty values when writing to settings', () => {
-      const vars: EnvVar[] = [
-        { name: 'A', value: '1' },
-        { name: 'B', value: '' },
-        { name: 'C', value: '3' },
-      ];
-      const result = filterEmpty(vars);
-      assert.strictEqual(result.length, 2);
-      assert.strictEqual(result[0].name, 'A');
-      assert.strictEqual(result[1].name, 'C');
     });
   });
 });
