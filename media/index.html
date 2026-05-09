@@ -30,20 +30,15 @@
       </div>
 
       <div class="card">
-        <div class="card-header">Environment Variables</div>
-        <table>
-          <thead>
-            <tr><th>Name</th><th>Value</th><th class="act"></th></tr>
-          </thead>
-          <tbody id="envBody"></tbody>
-        </table>
-        <div class="table-toolbar">
-          <button id="addRow">+ Add</button>
+        <div class="card-header">Setting</div>
+        <div class="form-row">
+          <label for="settingKey">Setting Key</label>
+          <input type="text" id="settingKey" placeholder="e.g. python.defaultInterpreterPath" />
         </div>
-        <div id="importBlock">
-          <label>Parse from bash snippet</label>
-          <textarea id="importArea" rows="5" placeholder="Paste export lines, one per line&#10;export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic&#10;export ANTHROPIC_AUTH_TOKEN=sk-xxx&#10;export ANTHROPIC_MODEL=deepseek-v4-pro[1m]"></textarea>
-          <button id="importBtn">Import</button>
+        <div class="form-row">
+          <label for="settingValue">Value (JSON)</label>
+          <textarea id="settingValue" rows="10" placeholder='"/usr/bin/python3.11"&#10;or&#10;[{ "name": "ANTHROPIC_BASE_URL", "value": "https://..." }]'></textarea>
+          <div class="hint">Enter any valid JSON: strings need quotes, numbers and booleans do not.</div>
         </div>
       </div>
 
