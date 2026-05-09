@@ -1,7 +1,7 @@
 {
-  "name": "claude-code-profile-manager",
-  "displayName": "Claude Code Profile Manager",
-  "description": "A VS Code extension to manage multiple Claude Code API profiles and switch between them without manually editing settings.json.",
+  "name": "vscode-settings-profile-manager",
+  "displayName": "VS Code: Settings Profile Manager",
+  "description": "Manage multiple VS Code: setting profiles and switch between them without manually editing settings.json.",
   "version": "0.9.4",
   "publisher": "jiang1997",
   "engines": {
@@ -11,54 +11,21 @@
     "type": "git",
     "url": "https://github.com/jiang1997/claude-code-profile-manager"
   },
+  "license": "MIT",
+  "keywords": ["settings", "profile", "configuration"],
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "onCommand:claudeSettingManager.manageProfiles"
+    "onCommand:settingProfileManager.manageProfiles"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "claudeSettingManager.manageProfiles",
+        "command": "settingProfileManager.manageProfiles",
         "title": "Manage Profiles",
-        "category": "Claude Code Profile"
-      }
-    ],
-    "configuration": [
-      {
-        "type": "object",
-        "title": "Claude Setting Manager",
-        "properties": {
-          "claudeSettingManager.environmentVariableName": {
-            "type": "string",
-            "default": "ANTHROPIC_BASE_URL",
-            "description": "Environment variable name for the API base URL inserted into the 'claudeCode.environmentVariables' setting."
-          }
-        }
-      },
-      {
-        "type": "object",
-        "title": "Claude Code",
-        "properties": {
-          "claudeCode.environmentVariables": {
-            "type": "array",
-            "default": [],
-            "description": "Environment variables passed to Claude Code.",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "value": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
+        "category": "Settings Profile"
       }
     ]
   },
