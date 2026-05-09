@@ -1,4 +1,4 @@
-// ── VS Code API shim ──────────────────────────────────────
+// ── VS Code: API shim ──────────────────────────────────────
 
 interface VsCodeApi {
   postMessage(message: unknown): void;
@@ -10,19 +10,15 @@ declare function acquireVsCodeApi(): VsCodeApi;
 
 // ── Types ─────────────────────────────────────────────────
 
-interface EnvVar {
+interface SettingProfile {
   name: string;
-  value: string;
-}
-
-interface ApiProfile {
-  name: string;
-  envVars: EnvVar[];
+  settingKey: string;
+  value: any;
 }
 
 interface InitMessage {
   command: 'init';
-  profiles: ApiProfile[];
+  profiles: SettingProfile[];
   activeProfileName: string | null;
 }
 
@@ -31,101 +27,36 @@ type WebviewMessage = InitMessage;
 // ── State ─────────────────────────────────────────────────
 
 const vscode = acquireVsCodeApi();
-let profiles: ApiProfile[] = [];
+let profiles: SettingProfile[] = [];
 let activeProfileName: string | null = null;
-let rows: EnvVar[] = [];
 let currentProfileName = '';
 let originalProfileName = '';
 
-// ── Render env var table ─────────────────────────────────
+// ── DOM refs ──────────────────────────────────────────────
 
-function renderTable(): void {
-  const body = document.getElementById('envBody')!;
-  body.textContent = '';
-  rows.forEach((r, i) => {
-    const tr = document.createElement('tr');
+const $ = (id: string) => document.getElementById(id)!;
+const profileNameInput = $('profileName') as HTMLInputElement;
+const settingKeyInput = $('settingKey') as HTMLInputElement;
+const settingValueInput = $('settingValue') as HTMLTextAreaElement;
 
-    const tdName = document.createElement('td');
-    tdName.className = 'nm';
-    const inpName = document.createElement('input');
-    inpName.type = 'text';
-    inpName.className = 'ev-name';
-    inpName.value = r.name;
-    inpName.placeholder = 'VAR_NAME';
-    (inpName.dataset as DOMStringMap).idx = String(i);
-    tdName.appendChild(inpName);
+// ── Render helpers ────────────────────────────────────────
 
-    const tdVal = document.createElement('td');
-    tdVal.className = 'vl';
-    const inpVal = document.createElement('input');
-    inpVal.type = r.name === 'ANTHROPIC_AUTH_TOKEN' ? 'password' : 'text';
-    inpVal.className = 'ev-value';
-    inpVal.value = r.value;
-    (inpVal.dataset as DOMStringMap).idx = String(i);
-    tdVal.appendChild(inpVal);
-
-    const tdDel = document.createElement('td');
-    tdDel.className = 'act';
-    const btnDel = document.createElement('button');
-    btnDel.className = 'rbtn del';
-    btnDel.textContent = '✕';
-    btnDel.title = 'Remove';
-    (btnDel.dataset as DOMStringMap).idx = String(i);
-    tdDel.appendChild(btnDel);
-
-    tr.appendChild(tdName);
-    tr.appendChild(tdVal);
-    tr.appendChild(tdDel);
-    body.appendChild(tr);
-  });
-}
-
-// ── Collect form data ────────────────────────────────────
-
-function collect(): EnvVar[] {
-  const names = document.querySelectorAll<HTMLInputElement>('.ev-name');
-  const values = document.querySelectorAll<HTMLInputElement>('.ev-value');
-  const result: EnvVar[] = [];
-  for (let i = 0; i < names.length; i++) {
-    const n = names[i].value.trim();
-    if (n) result.push({ name: n, value: values[i].value });
-  }
-  return result;
-}
-
-// ── Load profile into form ───────────────────────────────
-
-function loadProfile(profile: ApiProfile): void {
+function loadProfile(profile: SettingProfile): void {
   currentProfileName = profile.name;
   originalProfileName = profile.name;
-  (document.getElementById('profileName') as HTMLInputElement).value = profile.name;
-  rows = profile.envVars.map((ev) => ({ name: ev.name, value: ev.value }));
-  renderTable();
-  document.getElementById('deleteBtn')!.disabled = false;
-  document.getElementById('activateBtn')!.disabled = false;
-  document.getElementById('emptyState')!.style.display = 'none';
-  document.getElementById('editorContent')!.classList.add('visible');
+  profileNameInput.value = profile.name;
+  settingKeyInput.value = profile.settingKey;
+  settingValueInput.value = JSON.stringify(profile.value, null, 2);
+  $('deleteBtn')!.disabled = false;
+  $('activateBtn')!.disabled = false;
+  $('emptyState')!.style.display = 'none';
+  $('editorContent')!.classList.add('visible');
   rebuildSidebar(profile.name);
   updateBadge();
 }
 
-// ── Default template vars ────────────────────────────────
-
-function defaultVars(): EnvVar[] {
-  return [
-    { name: 'ANTHROPIC_BASE_URL', value: '' },
-    { name: 'ANTHROPIC_AUTH_TOKEN', value: '' },
-    { name: 'ANTHROPIC_MODEL', value: '' },
-    { name: 'ANTHROPIC_DEFAULT_OPUS_MODEL', value: '' },
-    { name: 'ANTHROPIC_DEFAULT_SONNET_MODEL', value: '' },
-    { name: 'ANTHROPIC_DEFAULT_HAIKU_MODEL', value: '' },
-  ];
-}
-
-// ── Rebuild profile list in sidebar ──────────────────────
-
 function rebuildSidebar(keepName: string): void {
-  const list = document.getElementById('profileList')!;
+  const list = $('profileList');
   list.textContent = '';
   profiles.forEach((p) => {
     const div = document.createElement('div');
@@ -140,10 +71,8 @@ function rebuildSidebar(keepName: string): void {
   });
 }
 
-// ── Update active badge ──────────────────────────────────
-
 function updateBadge(): void {
-  const b = document.getElementById('activeBadge')!;
+  const b = $('activeBadge');
   const isActive = activeProfileName !== null && currentProfileName === activeProfileName;
   if (isActive) {
     b.textContent = '● Active';
@@ -156,17 +85,39 @@ function updateBadge(): void {
   }
 }
 
-// ── Handle init from extension ───────────────────────────
+function nextProfileName(): string {
+  let max = 0;
+  const re = /^profile-(\d+)$/;
+  for (const p of profiles) {
+    const m = p.name.match(re);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n > max) max = n;
+    }
+  }
+  return `profile-${max + 1}`;
+}
+
+function clearForm(): void {
+  currentProfileName = '';
+  originalProfileName = '';
+  profileNameInput.value = '';
+  settingKeyInput.value = '';
+  settingValueInput.value = '';
+  $('deleteBtn')!.disabled = true;
+  $('activateBtn')!.disabled = true;
+  $('emptyState')!.style.display = 'flex';
+  $('editorContent')!.classList.remove('visible');
+  rebuildSidebar('');
+}
 
 function handleInit(data: InitMessage): void {
   profiles = data.profiles || [];
   activeProfileName = data.activeProfileName;
   updateBadge();
 
-  // Preserve current selection if still valid
   let keepName = currentProfileName;
   if (keepName && profiles.every((p) => p.name !== keepName)) {
-    // currently selected profile was deleted
     keepName = activeProfileName || (profiles.length > 0 ? profiles[0].name : '');
   }
   rebuildSidebar(keepName);
@@ -184,34 +135,29 @@ function handleInit(data: InitMessage): void {
   }
 }
 
-// ── Next available profile name ──────────────────────────
-
-function nextProfileName(): string {
-  let max = 0;
-  const re = /^profile-(\d+)$/;
-  for (const p of profiles) {
-    const m = p.name.match(re);
-    if (m) {
-      const n = parseInt(m[1], 10);
-      if (n > max) max = n;
-    }
+function validateProfile(): { ok: true; profile: SettingProfile } | { ok: false; error: string } {
+  const name = profileNameInput.value.trim();
+  if (!name) {
+    profileNameInput.focus();
+    return { ok: false, error: 'Profile name is required' };
   }
-  return `profile-${max + 1}`;
-}
 
-// ── Clear the form ───────────────────────────────────────
+  const settingKey = settingKeyInput.value.trim();
+  if (!settingKey) {
+    settingKeyInput.focus();
+    return { ok: false, error: 'Setting key is required' };
+  }
 
-function clearForm(): void {
-  currentProfileName = '';
-  originalProfileName = '';
-  (document.getElementById('profileName') as HTMLInputElement).value = '';
-  rows = defaultVars();
-  renderTable();
-  document.getElementById('deleteBtn')!.disabled = true;
-  document.getElementById('activateBtn')!.disabled = true;
-  document.getElementById('emptyState')!.style.display = 'flex';
-  document.getElementById('editorContent')!.classList.remove('visible');
-  rebuildSidebar('');
+  const valueText = settingValueInput.value.trim();
+  let value: any;
+  try {
+    value = valueText ? JSON.parse(valueText) : undefined;
+  } catch (e) {
+    settingValueInput.focus();
+    return { ok: false, error: `Invalid JSON value: ${e instanceof Error ? e.message : String(e)}` };
+  }
+
+  return { ok: true, profile: { name, settingKey, value } };
 }
 
 // ── Event: messages from extension ───────────────────────
@@ -238,14 +184,14 @@ document.getElementById('profileList')!.addEventListener('click', (e) => {
 
 document.getElementById('newBtn')!.addEventListener('click', () => {
   clearForm();
-  document.getElementById('emptyState')!.style.display = 'none';
-  document.getElementById('editorContent')!.classList.add('visible');
+  $('emptyState')!.style.display = 'none';
+  $('editorContent')!.classList.add('visible');
   const name = nextProfileName();
-  (document.getElementById('profileName') as HTMLInputElement).value = name;
+  profileNameInput.value = name;
   currentProfileName = name;
   originalProfileName = '';
-  document.getElementById('profileName')!.focus();
-  document.getElementById('profileName')!.select();
+  profileNameInput.focus();
+  profileNameInput.select();
 });
 
 // ── Event: Delete button ─────────────────────────────────
@@ -255,69 +201,26 @@ document.getElementById('deleteBtn')!.addEventListener('click', () => {
   vscode.postMessage({ command: 'delete', profileName: currentProfileName });
 });
 
-// ── Event: Env table input changes ───────────────────────
-
-document.getElementById('envBody')!.addEventListener('input', (e) => {
-  const el = e.target as HTMLInputElement;
-  const idx = parseInt((el.dataset as DOMStringMap).idx || '');
-  if (isNaN(idx) || !rows[idx]) return;
-  rows[idx][el.classList.contains('ev-name') ? 'name' : 'value'] = el.value;
-});
-
-// ── Event: Env table delete row ──────────────────────────
-
-document.getElementById('envBody')!.addEventListener('click', (e) => {
-  const btn = e.target as HTMLElement;
-  if (!btn.classList.contains('del')) return;
-  const idx = parseInt((btn.dataset as DOMStringMap).idx || '');
-  rows.splice(idx, 1);
-  renderTable();
-});
-
-// ── Event: Add variable row ──────────────────────────────
-
-document.getElementById('addRow')!.addEventListener('click', () => {
-  rows.push({ name: '', value: '' });
-  renderTable();
-});
-
-// ── Event: Parse from bash snippet ───────────────────────
-
-document.getElementById('importBtn')!.addEventListener('click', () => {
-  const text = (document.getElementById('importArea') as HTMLTextAreaElement).value;
-  if (!text.trim()) return;
-  const lines = text.split(/\r?\n/);
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-    const m = trimmed.match(/^(?:export\s+)?(\w+)=(.+)$/);
-    if (!m) return;
-    const found = rows.findIndex((r) => r.name === m[1]);
-    if (found >= 0) {
-      rows[found].value = m[2];
-    } else {
-      rows.push({ name: m[1], value: m[2] });
-    }
-  });
-  (document.getElementById('importArea') as HTMLTextAreaElement).value = '';
-  renderTable();
-});
-
 // ── Event: Save ──────────────────────────────────────────
 
 document.getElementById('saveBtn')!.addEventListener('click', () => {
-  const name = (document.getElementById('profileName') as HTMLInputElement).value.trim();
-  if (!name) {
-    document.getElementById('profileName')!.focus();
+  const result = validateProfile();
+  if (!result.ok) {
+    const err = document.createElement('div');
+    err.textContent = result.error;
+    err.style.cssText = 'color:#f48771;margin:8px 0;font-size:12px;';
+    const actions = document.querySelector('.actions')!;
+    actions.parentNode!.insertBefore(err, actions);
+    setTimeout(() => err.remove(), 3000);
     return;
   }
   vscode.postMessage({
     command: 'save',
-    profile: { name, envVars: collect() },
+    profile: result.profile,
     oldName: originalProfileName,
   });
-  currentProfileName = name;
-  originalProfileName = name;
+  currentProfileName = result.profile.name;
+  originalProfileName = result.profile.name;
 });
 
 // ── Event: Activate ──────────────────────────────────────
@@ -329,5 +232,4 @@ document.getElementById('activateBtn')!.addEventListener('click', () => {
 
 // ── Start: tell extension we're ready ────────────────────
 
-renderTable();
 vscode.postMessage({ command: 'ready' });
