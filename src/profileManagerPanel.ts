@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ApiProfile, EnvVar, loadProfiles, PROFILES_KEY, SELECTED_PROFILE_KEY } from './types';
+import stripJsonComments from 'strip-json-comments';
+import { SettingProfile, loadProfiles, PROFILES_KEY, SELECTED_PROFILE_KEY } from './types';
 
 export class ProfileManagerPanel {
   private static instance: ProfileManagerPanel | undefined;
@@ -18,7 +19,7 @@ export class ProfileManagerPanel {
 
     const panel = vscode.window.createWebviewPanel(
       'profileManager',
-      'Claude Code Profiles',
+      'Settings Profiles',
       vscode.ViewColumn.One,
       { enableScripts: true, retainContextWhenHidden: true },
     );
@@ -76,7 +77,7 @@ export class ProfileManagerPanel {
     });
   }
 
-  private async _handleMessage(msg: { command: string; profile?: ApiProfile; profileName?: string; oldName?: string }) {
+  private async _handleMessage(msg: { command: string; profile?: SettingProfile; profileName?: string; oldName?: string }) {
     switch (msg.command) {
       case 'ready':
         this.refresh();
@@ -99,7 +100,7 @@ export class ProfileManagerPanel {
           profiles.push(msg.profile);
         }
         if (savingActiveProfile) {
-          await writeEnvVars(msg.profile.envVars);
+          await writeSetting(msg.profile.settingKey, msg.profile.value, getUserSettingsUri(this._context));
         }
         await this._context.globalState.update(PROFILES_KEY, profiles);
         if (savingActiveProfile && activeName !== msg.profile.name) {
@@ -117,7 +118,7 @@ export class ProfileManagerPanel {
         const profiles = loadProfiles(this._context);
         const profile = profiles.find(p => p.name === msg.profileName);
         if (!profile) return;
-        await writeEnvVars(profile.envVars);
+        await writeSetting(profile.settingKey, profile.value, getUserSettingsUri(this._context));
         await this._context.globalState.update(SELECTED_PROFILE_KEY, profile.name);
         updateStatusBar(this._statusBarItem, profile.name);
         this.refresh();
@@ -147,7 +148,7 @@ export class ProfileManagerPanel {
           const removed = profiles.splice(idx, 1)[0];
           const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
           if (activeName === removed.name) {
-            await clearEnvVars();
+            await clearSetting(removed.settingKey, getUserSettingsUri(this._context));
           }
           await this._context.globalState.update(PROFILES_KEY, profiles);
           if (activeName === removed.name) {
@@ -162,25 +163,109 @@ export class ProfileManagerPanel {
   }
 }
 
-// ── Module-level helpers (moved from extension.ts) ────────
+// ── Status bar helper ─────────────────────────────────────
 
 function updateStatusBar(item: vscode.StatusBarItem, profileName?: string) {
   if (profileName) {
     item.text = `$(account) ${profileName}`;
-    item.tooltip = `Active Claude API profile: ${profileName}`;
+    item.tooltip = `Active profile: ${profileName}`;
     item.show();
   } else {
     item.hide();
   }
 }
 
-async function writeEnvVars(envVars: EnvVar[]) {
-  const config = vscode.workspace.getConfiguration('claudeCode');
-  const filled = envVars.filter(e => e.value !== '');
-  await config.update('environmentVariables', filled, vscode.ConfigurationTarget.Global);
+// ── Settings.json I/O via workspace.fs ──────────────────
+
+export function getUserSettingsUri(context: vscode.ExtensionContext): vscode.Uri {
+  const normalized = path.normalize(context.globalStorageUri.fsPath);
+  const userDir = path.dirname(path.dirname(normalized));
+  return vscode.Uri.file(path.join(userDir, 'settings.json'));
 }
 
-async function clearEnvVars() {
-  const config = vscode.workspace.getConfiguration('claudeCode');
-  await config.update('environmentVariables', [], vscode.ConfigurationTarget.Global);
+export async function readUserSettings(uri: vscode.Uri): Promise<Record<string, any>> {
+  try {
+    const raw = await vscode.workspace.fs.readFile(uri);
+    const text = Buffer.from(raw).toString('utf8');
+    return JSON.parse(stripJsonComments(text));
+  } catch (err) {
+    console.error('[ProfileManager] Read failed for:', uri.fsPath, err);
+    return {};
+  }
+}
+
+export function isRemote(): boolean {
+  return vscode.env.remoteName !== undefined;
+}
+
+async function writeSetting(settingKey: string, value: any, settingsUri: vscode.Uri) {
+  console.log('[ProfileManager] === WRITE START ===');
+  console.log('[ProfileManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
+  console.log('[ProfileManager] Key:', settingKey, 'Value:', JSON.stringify(value));
+
+  try {
+    if (isRemote()) {
+      console.log('[ProfileManager] Remote detected — using config.update');
+      const config = vscode.workspace.getConfiguration();
+      await config.update(settingKey, value, vscode.ConfigurationTarget.Global);
+    } else {
+      const settingsBefore = await readUserSettings(settingsUri);
+      console.log('[ProfileManager] Settings BEFORE:', JSON.stringify(settingsBefore, null, 2));
+
+      settingsBefore[settingKey] = value;
+
+      const data = Buffer.from(JSON.stringify(settingsBefore, null, 4), 'utf8');
+      await vscode.workspace.fs.writeFile(settingsUri, data);
+
+      const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
+      const verifyText = Buffer.from(verifyRaw).toString('utf8');
+      const verify = JSON.parse(stripJsonComments(verifyText));
+      console.log('[ProfileManager] Settings AFTER:', JSON.stringify(verify, null, 2));
+
+      if (JSON.stringify(verify[settingKey]) === JSON.stringify(value)) {
+        console.log('[ProfileManager] VERIFY: OK');
+      } else {
+        console.error('[ProfileManager] VERIFY: MISMATCH');
+      }
+    }
+    console.log('[ProfileManager] === WRITE END ===');
+  } catch (err) {
+    console.error('[ProfileManager] Write failed:', err);
+    throw err;
+  }
+}
+
+async function clearSetting(settingKey: string, settingsUri: vscode.Uri) {
+  console.log('[ProfileManager] === CLEAR START ===');
+  console.log('[ProfileManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
+  console.log('[ProfileManager] Key:', settingKey);
+
+  try {
+    if (isRemote()) {
+      console.log('[ProfileManager] Remote detected — using config.update');
+      const config = vscode.workspace.getConfiguration();
+      await config.update(settingKey, undefined, vscode.ConfigurationTarget.Global);
+    } else {
+      const settingsBefore = await readUserSettings(settingsUri);
+      delete settingsBefore[settingKey];
+
+      const data = Buffer.from(JSON.stringify(settingsBefore, null, 4), 'utf8');
+      await vscode.workspace.fs.writeFile(settingsUri, data);
+
+      const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
+      const verifyText = Buffer.from(verifyRaw).toString('utf8');
+      const verify = JSON.parse(stripJsonComments(verifyText));
+      console.log('[ProfileManager] Settings AFTER:', JSON.stringify(verify, null, 2));
+
+      if (!(settingKey in verify)) {
+        console.log('[ProfileManager] VERIFY: OK');
+      } else {
+        console.error('[ProfileManager] VERIFY: MISMATCH');
+      }
+    }
+    console.log('[ProfileManager] === CLEAR END ===');
+  } catch (err) {
+    console.error('[ProfileManager] Clear failed:', err);
+    throw err;
+  }
 }
