@@ -2,9 +2,9 @@
 
 A VS Code: extension to save multiple preset values for any setting key in `settings.json` and switch between them instantly.
 
-[![Latest Release](https://img.shields.io/github/v/release/jiang1997/user-settings-presets?label=download&color=007ACC)](https://github.com/jiang1997/user-settings-presets/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/jiang1997/vscode-user-settings-presets?label=download&color=007ACC)](https://github.com/jiang1997/vscode-user-settings-presets/releases/latest)
 
-![Screenshot](https://github.com/jiang1997/user-settings-presets/raw/master/screenshot.png)
+![Screenshot](https://github.com/jiang1997/vscode-user-settings-presets/raw/master/screenshot.png)
 
 ## Usage
 

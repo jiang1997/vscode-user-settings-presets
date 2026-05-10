@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jiang1997/user-settings-presets"
+    "url": "https://github.com/jiang1997/vscode-user-settings-presets"
   },
   "license": "MIT",
   "keywords": ["settings", "presets", "configuration"],
