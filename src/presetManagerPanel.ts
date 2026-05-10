@@ -8,10 +8,9 @@ export class PresetManagerPanel {
   private static instance: PresetManagerPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _context: vscode.ExtensionContext;
-  private readonly _statusBarItem: vscode.StatusBarItem;
   private _disposables: vscode.Disposable[] = [];
 
-  static show(context: vscode.ExtensionContext, statusBarItem: vscode.StatusBarItem): void {
+  static show(context: vscode.ExtensionContext): void {
     if (PresetManagerPanel.instance) {
       PresetManagerPanel.instance._panel.reveal(vscode.ViewColumn.One);
       return;
@@ -24,17 +23,15 @@ export class PresetManagerPanel {
       { enableScripts: true, retainContextWhenHidden: true },
     );
 
-    PresetManagerPanel.instance = new PresetManagerPanel(panel, context, statusBarItem);
+    PresetManagerPanel.instance = new PresetManagerPanel(panel, context);
   }
 
   private constructor(
     panel: vscode.WebviewPanel,
     context: vscode.ExtensionContext,
-    statusBarItem: vscode.StatusBarItem,
   ) {
     this._panel = panel;
     this._context = context;
-    this._statusBarItem = statusBarItem;
 
     this._panel.webview.html = this._getHtml();
 
@@ -106,9 +103,6 @@ export class PresetManagerPanel {
         if (savingActivePreset && activeName !== msg.preset.name) {
           await this._context.globalState.update(SELECTED_PRESET_KEY, msg.preset.name);
         }
-        if (savingActivePreset) {
-          updateStatusBar(this._statusBarItem, msg.preset.name);
-        }
         this.refresh();
         break;
       }
@@ -120,7 +114,6 @@ export class PresetManagerPanel {
         if (!preset) return;
         await writeSetting(preset.settingKey, preset.value, getUserSettingsUri(this._context));
         await this._context.globalState.update(SELECTED_PRESET_KEY, preset.name);
-        updateStatusBar(this._statusBarItem, preset.name);
         this.refresh();
 
         const reload = await vscode.window.showInformationMessage(
@@ -153,25 +146,12 @@ export class PresetManagerPanel {
           await this._context.globalState.update(PRESETS_KEY, presets);
           if (activeName === removed.name) {
             await this._context.globalState.update(SELECTED_PRESET_KEY, undefined);
-            updateStatusBar(this._statusBarItem, undefined);
           }
         }
         this.refresh();
         break;
       }
     }
-  }
-}
-
-// ── Status bar helper ─────────────────────────────────────
-
-function updateStatusBar(item: vscode.StatusBarItem, presetName?: string) {
-  if (presetName) {
-    item.text = `$(account) ${presetName}`;
-    item.tooltip = `Active preset: ${presetName}`;
-    item.show();
-  } else {
-    item.hide();
   }
 }
 
