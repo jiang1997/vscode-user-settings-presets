@@ -16,6 +16,42 @@ Open via **Command Palette** (`Ctrl+Shift+P` → `User Settings Presets: Manage 
 - **Preset card** — shows the preset name and whether it's currently active.
 - **Setting card** — enter the setting key (e.g., `python.defaultInterpreterPath`) and a JSON value. Strings need quotes; numbers and booleans do not.
 
+### Example: Switch Claude Code: Provider
+
+Create two presets with the same setting key `claudeCode.environmentVariables`, then switch between them in one click.
+
+**Preset: `Claude via Kimi`**
+
+```json
+[
+    {
+        "name": "ANTHROPIC_BASE_URL",
+        "value": "https://api.kimi.com/coding/"
+    },
+    {
+        "name": "ANTHROPIC_AUTH_TOKEN",
+        "value": "your-kimi-api-key"
+    }
+]
+```
+
+**Preset: `Claude via OpenRouter`**
+
+```json
+[
+    {
+        "name": "ANTHROPIC_BASE_URL",
+        "value": "https://openrouter.ai/api/v1"
+    },
+    {
+        "name": "ANTHROPIC_AUTH_TOKEN",
+        "value": "your-openrouter-api-key"
+    }
+]
+```
+
+Activate either preset and reload the window — Claude Code: will use the corresponding provider immediately.
+
 ## Build
 
 ```bash
