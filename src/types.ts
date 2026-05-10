@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 
-export interface SettingProfile {
+export interface SettingPreset {
   name: string;
   settingKey: string;
   value: any;
 }
 
-export const PROFILES_KEY = 'settingProfiles';
-export const SELECTED_PROFILE_KEY = 'selectedSettingProfile';
+export const PRESETS_KEY = 'settingPresets';
+export const SELECTED_PRESET_KEY = 'selectedSettingPreset';
 
-export function loadProfiles(context: vscode.ExtensionContext): SettingProfile[] {
-  return context.globalState.get(PROFILES_KEY, []);
+export function loadPresets(context: vscode.ExtensionContext): SettingPreset[] {
+  return context.globalState.get(PRESETS_KEY, []);
 }

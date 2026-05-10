@@ -1,19 +1,19 @@
-# VS Code: Settings Profile Manager
+# User Settings Presets
 
-A VS Code: extension to manage multiple setting profiles and switch between them without manually editing `settings.json`.
+A VS Code: extension to save multiple preset values for any setting key in `settings.json` and switch between them instantly.
 
-[![Latest Release](https://img.shields.io/github/v/release/jiang1997/vscode-settings-profile-manager?label=download&color=007ACC)](https://github.com/jiang1997/vscode-settings-profile-manager/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/jiang1997/user-settings-presets?label=download&color=007ACC)](https://github.com/jiang1997/user-settings-presets/releases/latest)
 
-![Screenshot](https://github.com/jiang1997/vscode-settings-profile-manager/raw/master/screenshot.png)
+![Screenshot](https://github.com/jiang1997/user-settings-presets/raw/master/screenshot.png)
 
 ## Usage
 
-Open via **Command Palette** (`Ctrl+Shift+P` → `Settings Profile: Manage Profiles`) or click the active profile name in the status bar.
+Open via **Command Palette** (`Ctrl+Shift+P` → `Settings Presets: Manage Presets`) or click the active preset name in the status bar.
 
-### Managing Profiles
+### Managing Presets
 
-- **Left sidebar** — lists all saved profiles. `●` marks the active one, `○` inactive ones. Click a profile to load it for editing.
-- **Profile card** — shows the profile name and whether it's currently active.
+- **Left sidebar** — lists all saved presets. `●` marks the active one, `○` inactive ones. Click a preset to load it for editing.
+- **Preset card** — shows the preset name and whether it's currently active.
 - **Setting card** — enter the setting key (e.g., `python.defaultInterpreterPath`) and a JSON value. Strings need quotes; numbers and booleans do not.
 
 ## Build

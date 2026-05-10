@@ -1,7 +1,7 @@
 {
-  "name": "vscode-settings-profile-manager",
-  "displayName": "VS Code: Settings Profile Manager",
-  "description": "Manage multiple VS Code: setting profiles and switch between them without manually editing settings.json.",
+  "name": "user-settings-presets",
+  "displayName": "User Settings Presets",
+  "description": "Save multiple preset values for any setting key in settings.json and switch between them instantly.",
   "version": "0.9.5",
   "publisher": "jiang1997",
   "engines": {
@@ -9,23 +9,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jiang1997/vscode-settings-profile-manager"
+    "url": "https://github.com/jiang1997/user-settings-presets"
   },
   "license": "MIT",
-  "keywords": ["settings", "profile", "configuration"],
+  "keywords": ["settings", "presets", "configuration"],
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "onCommand:settingProfileManager.manageProfiles"
+    "onCommand:userSettingsPresets.manage"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "settingProfileManager.manageProfiles",
-        "title": "Manage Profiles",
-        "category": "Settings Profile"
+        "command": "userSettingsPresets.manage",
+        "title": "Manage Presets",
+        "category": "Settings Presets"
       }
     ]
   },

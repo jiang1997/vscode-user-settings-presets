@@ -10,7 +10,7 @@ declare function acquireVsCodeApi(): VsCodeApi;
 
 // ── Types ─────────────────────────────────────────────────
 
-interface SettingProfile {
+interface SettingPreset {
   name: string;
   settingKey: string;
   value: any;
@@ -18,8 +18,8 @@ interface SettingProfile {
 
 interface InitMessage {
   command: 'init';
-  profiles: SettingProfile[];
-  activeProfileName: string | null;
+  presets: SettingPreset[];
+  activePresetName: string | null;
 }
 
 type WebviewMessage = InitMessage;
@@ -27,46 +27,46 @@ type WebviewMessage = InitMessage;
 // ── State ─────────────────────────────────────────────────
 
 const vscode = acquireVsCodeApi();
-let profiles: SettingProfile[] = [];
-let activeProfileName: string | null = null;
-let currentProfileName = '';
-let originalProfileName = '';
+let presets: SettingPreset[] = [];
+let activePresetName: string | null = null;
+let currentPresetName = '';
+let originalPresetName = '';
 
 // ── DOM refs ──────────────────────────────────────────────
 
 const $ = (id: string) => document.getElementById(id)!;
-const profileNameInput = $('profileName') as HTMLInputElement;
+const presetNameInput = $('presetName') as HTMLInputElement;
 const settingKeyInput = $('settingKey') as HTMLInputElement;
 const settingValueInput = $('settingValue') as HTMLTextAreaElement;
 const templateSelect = $('templateSelect') as HTMLSelectElement;
 
 // ── Render helpers ────────────────────────────────────────
 
-function loadProfile(profile: SettingProfile): void {
-  currentProfileName = profile.name;
-  originalProfileName = profile.name;
-  profileNameInput.value = profile.name;
-  settingKeyInput.value = profile.settingKey;
-  settingValueInput.value = JSON.stringify(profile.value, null, 2);
-  templateSelect.value = TEMPLATES[profile.settingKey] ? profile.settingKey : '';
+function loadPreset(preset: SettingPreset): void {
+  currentPresetName = preset.name;
+  originalPresetName = preset.name;
+  presetNameInput.value = preset.name;
+  settingKeyInput.value = preset.settingKey;
+  settingValueInput.value = JSON.stringify(preset.value, null, 2);
+  templateSelect.value = TEMPLATES[preset.settingKey] ? preset.settingKey : '';
   $('deleteBtn')!.disabled = false;
   $('activateBtn')!.disabled = false;
   $('emptyState')!.style.display = 'none';
   $('editorContent')!.classList.add('visible');
-  rebuildSidebar(profile.name);
+  rebuildSidebar(preset.name);
   updateBadge();
 }
 
 function rebuildSidebar(keepName: string): void {
-  const list = $('profileList');
+  const list = $('presetList');
   list.textContent = '';
-  profiles.forEach((p) => {
+  presets.forEach((p) => {
     const div = document.createElement('div');
-    div.className = 'profile-item' + (p.name === keepName ? ' active' : '');
+    div.className = 'preset-item' + (p.name === keepName ? ' active' : '');
     (div.dataset as DOMStringMap).name = p.name;
     const dot = document.createElement('span');
     dot.className = 'dot';
-    dot.textContent = p.name === activeProfileName ? '●' : '○';
+    dot.textContent = p.name === activePresetName ? '●' : '○';
     div.appendChild(dot);
     div.appendChild(document.createTextNode(p.name));
     list.appendChild(div);
@@ -75,24 +75,24 @@ function rebuildSidebar(keepName: string): void {
 
 function updateBadge(): void {
   const b = $('activeBadge');
-  const isActive = activeProfileName !== null && currentProfileName === activeProfileName;
+  const isActive = activePresetName !== null && currentPresetName === activePresetName;
   if (isActive) {
     b.textContent = '● Active';
-    b.title = 'This profile is currently active';
+    b.title = 'This preset is currently active';
     b.className = 'active-pill';
   } else {
     b.textContent = 'Not active';
-    b.title = 'Click Activate to switch to this profile';
+    b.title = 'Click Activate to switch to this preset';
     b.className = 'active-pill inactive';
   }
 }
 
-interface ProfileTemplate {
+interface PresetTemplate {
   settingKey: string;
   value: any;
 }
 
-const TEMPLATES: Record<string, ProfileTemplate> = {
+const TEMPLATES: Record<string, PresetTemplate> = {
   'claudeCode.environmentVariables': {
     settingKey: 'claudeCode.environmentVariables',
     value: [{ name: '', value: '' }],
@@ -107,23 +107,23 @@ const TEMPLATES: Record<string, ProfileTemplate> = {
   },
 };
 
-function nextProfileName(): string {
+function nextPresetName(): string {
   let max = 0;
-  const re = /^profile-(\d+)$/;
-  for (const p of profiles) {
+  const re = /^preset-(\d+)$/;
+  for (const p of presets) {
     const m = p.name.match(re);
     if (m) {
       const n = parseInt(m[1], 10);
       if (n > max) max = n;
     }
   }
-  return `profile-${max + 1}`;
+  return `preset-${max + 1}`;
 }
 
 function clearForm(): void {
-  currentProfileName = '';
-  originalProfileName = '';
-  profileNameInput.value = '';
+  currentPresetName = '';
+  originalPresetName = '';
+  presetNameInput.value = '';
   settingKeyInput.value = '';
   settingValueInput.value = '';
   templateSelect.value = '';
@@ -135,34 +135,34 @@ function clearForm(): void {
 }
 
 function handleInit(data: InitMessage): void {
-  profiles = data.profiles || [];
-  activeProfileName = data.activeProfileName;
+  presets = data.presets || [];
+  activePresetName = data.activePresetName;
   updateBadge();
 
-  let keepName = currentProfileName;
-  if (keepName && profiles.every((p) => p.name !== keepName)) {
-    keepName = activeProfileName || (profiles.length > 0 ? profiles[0].name : '');
+  let keepName = currentPresetName;
+  if (keepName && presets.every((p) => p.name !== keepName)) {
+    keepName = activePresetName || (presets.length > 0 ? presets[0].name : '');
   }
   rebuildSidebar(keepName);
 
   if (keepName) {
-    const p = profiles.find((p) => p.name === keepName);
-    if (p) loadProfile(p);
-  } else if (profiles.length > 0) {
-    const first = activeProfileName
-      ? profiles.find((p) => p.name === activeProfileName)
-      : profiles[0];
-    if (first) loadProfile(first);
+    const p = presets.find((p) => p.name === keepName);
+    if (p) loadPreset(p);
+  } else if (presets.length > 0) {
+    const first = activePresetName
+      ? presets.find((p) => p.name === activePresetName)
+      : presets[0];
+    if (first) loadPreset(first);
   } else {
     clearForm();
   }
 }
 
-function validateProfile(): { ok: true; profile: SettingProfile } | { ok: false; error: string } {
-  const name = profileNameInput.value.trim();
+function validatePreset(): { ok: true; preset: SettingPreset } | { ok: false; error: string } {
+  const name = presetNameInput.value.trim();
   if (!name) {
-    profileNameInput.focus();
-    return { ok: false, error: 'Profile name is required' };
+    presetNameInput.focus();
+    return { ok: false, error: 'Preset name is required' };
   }
 
   const settingKey = settingKeyInput.value.trim();
@@ -180,7 +180,7 @@ function validateProfile(): { ok: true; profile: SettingProfile } | { ok: false;
     return { ok: false, error: `Invalid JSON value: ${e instanceof Error ? e.message : String(e)}` };
   }
 
-  return { ok: true, profile: { name, settingKey, value } };
+  return { ok: true, preset: { name, settingKey, value } };
 }
 
 // ── Event: messages from extension ───────────────────────
@@ -192,15 +192,15 @@ window.addEventListener('message', (e) => {
   }
 });
 
-// ── Event: sidebar profile click ─────────────────────────
+// ── Event: sidebar preset click ─────────────────────────
 
-document.getElementById('profileList')!.addEventListener('click', (e) => {
+document.getElementById('presetList')!.addEventListener('click', (e) => {
   const el = e.target as HTMLElement;
-  const item = el.closest('.profile-item') as HTMLElement | null;
+  const item = el.closest('.preset-item') as HTMLElement | null;
   if (!item) return;
   const name = (item.dataset as DOMStringMap).name;
-  const p = profiles.find((p) => p.name === name);
-  if (p) loadProfile(p);
+  const p = presets.find((p) => p.name === name);
+  if (p) loadPreset(p);
 });
 
 // ── Event: Template select ───────────────────────────────
@@ -217,31 +217,31 @@ document.getElementById('templateSelect')!.addEventListener('change', () => {
   }
 });
 
-// ── Event: + New Profile button ──────────────────────────
+// ── Event: + New Preset button ──────────────────────────
 
 document.getElementById('newBtn')!.addEventListener('click', () => {
   clearForm();
   $('emptyState')!.style.display = 'none';
   $('editorContent')!.classList.add('visible');
-  const name = nextProfileName();
-  profileNameInput.value = name;
-  currentProfileName = name;
-  originalProfileName = '';
-  profileNameInput.focus();
-  profileNameInput.select();
+  const name = nextPresetName();
+  presetNameInput.value = name;
+  currentPresetName = name;
+  originalPresetName = '';
+  presetNameInput.focus();
+  presetNameInput.select();
 });
 
 // ── Event: Delete button ─────────────────────────────────
 
 document.getElementById('deleteBtn')!.addEventListener('click', () => {
-  if (!currentProfileName) return;
-  vscode.postMessage({ command: 'delete', profileName: currentProfileName });
+  if (!currentPresetName) return;
+  vscode.postMessage({ command: 'delete', presetName: currentPresetName });
 });
 
 // ── Event: Save ──────────────────────────────────────────
 
 document.getElementById('saveBtn')!.addEventListener('click', () => {
-  const result = validateProfile();
+  const result = validatePreset();
   if (!result.ok) {
     const err = document.createElement('div');
     err.textContent = result.error;
@@ -253,18 +253,18 @@ document.getElementById('saveBtn')!.addEventListener('click', () => {
   }
   vscode.postMessage({
     command: 'save',
-    profile: result.profile,
-    oldName: originalProfileName,
+    preset: result.preset,
+    oldName: originalPresetName,
   });
-  currentProfileName = result.profile.name;
-  originalProfileName = result.profile.name;
+  currentPresetName = result.preset.name;
+  originalPresetName = result.preset.name;
 });
 
 // ── Event: Activate ──────────────────────────────────────
 
 document.getElementById('activateBtn')!.addEventListener('click', () => {
-  if (!currentProfileName) return;
-  vscode.postMessage({ command: 'activate', profileName: currentProfileName });
+  if (!currentPresetName) return;
+  vscode.postMessage({ command: 'activate', presetName: currentPresetName });
 });
 
 // ── Start: tell extension we're ready ────────────────────

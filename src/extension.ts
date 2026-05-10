@@ -1,28 +1,28 @@
 import * as vscode from 'vscode';
-import { SELECTED_PROFILE_KEY } from './types';
-import { ProfileManagerPanel } from './profileManagerPanel';
+import { SELECTED_PRESET_KEY } from './types';
+import { PresetManagerPanel } from './presetManagerPanel';
 
 export function activate(context: vscode.ExtensionContext) {
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarItem.command = 'settingProfileManager.manageProfiles';
+  statusBarItem.command = 'userSettingsPresets.manage';
   context.subscriptions.push(statusBarItem);
 
-  const activeProfile: string | undefined = context.globalState.get(SELECTED_PROFILE_KEY);
-  updateStatusBar(statusBarItem, activeProfile);
+  const activePreset: string | undefined = context.globalState.get(SELECTED_PRESET_KEY);
+  updateStatusBar(statusBarItem, activePreset);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('settingProfileManager.manageProfiles', () => {
-      ProfileManagerPanel.show(context, statusBarItem);
+    vscode.commands.registerCommand('userSettingsPresets.manage', () => {
+      PresetManagerPanel.show(context, statusBarItem);
     }),
   );
 }
 
 export function deactivate() {}
 
-function updateStatusBar(item: vscode.StatusBarItem, profileName?: string) {
-  if (profileName) {
-    item.text = `$(account) ${profileName}`;
-    item.tooltip = `Active profile: ${profileName}`;
+function updateStatusBar(item: vscode.StatusBarItem, presetName?: string) {
+  if (presetName) {
+    item.text = `$(account) ${presetName}`;
+    item.tooltip = `Active preset: ${presetName}`;
     item.show();
   } else {
     item.hide();

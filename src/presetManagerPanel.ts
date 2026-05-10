@@ -2,29 +2,29 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import stripJsonComments from 'strip-json-comments';
-import { SettingProfile, loadProfiles, PROFILES_KEY, SELECTED_PROFILE_KEY } from './types';
+import { SettingPreset, loadPresets, PRESETS_KEY, SELECTED_PRESET_KEY } from './types';
 
-export class ProfileManagerPanel {
-  private static instance: ProfileManagerPanel | undefined;
+export class PresetManagerPanel {
+  private static instance: PresetManagerPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _context: vscode.ExtensionContext;
   private readonly _statusBarItem: vscode.StatusBarItem;
   private _disposables: vscode.Disposable[] = [];
 
   static show(context: vscode.ExtensionContext, statusBarItem: vscode.StatusBarItem): void {
-    if (ProfileManagerPanel.instance) {
-      ProfileManagerPanel.instance._panel.reveal(vscode.ViewColumn.One);
+    if (PresetManagerPanel.instance) {
+      PresetManagerPanel.instance._panel.reveal(vscode.ViewColumn.One);
       return;
     }
 
     const panel = vscode.window.createWebviewPanel(
-      'profileManager',
-      'Settings Profiles',
+      'presetManager',
+      'User Settings Presets',
       vscode.ViewColumn.One,
       { enableScripts: true, retainContextWhenHidden: true },
     );
 
-    ProfileManagerPanel.instance = new ProfileManagerPanel(panel, context, statusBarItem);
+    PresetManagerPanel.instance = new PresetManagerPanel(panel, context, statusBarItem);
   }
 
   private constructor(
@@ -45,7 +45,7 @@ export class ProfileManagerPanel {
     );
 
     this._panel.onDidDispose(() => {
-      ProfileManagerPanel.instance = undefined;
+      PresetManagerPanel.instance = undefined;
       this._disposables.forEach((d) => d.dispose());
     });
   }
@@ -68,63 +68,63 @@ export class ProfileManagerPanel {
   }
 
   private refresh(): void {
-    const profiles = loadProfiles(this._context);
-    const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
+    const presets = loadPresets(this._context);
+    const activeName: string | undefined = this._context.globalState.get(SELECTED_PRESET_KEY);
     this._panel.webview.postMessage({
       command: 'init',
-      profiles,
-      activeProfileName: activeName ?? null,
+      presets,
+      activePresetName: activeName ?? null,
     });
   }
 
-  private async _handleMessage(msg: { command: string; profile?: SettingProfile; profileName?: string; oldName?: string }) {
+  private async _handleMessage(msg: { command: string; preset?: SettingPreset; presetName?: string; oldName?: string }) {
     switch (msg.command) {
       case 'ready':
         this.refresh();
         break;
 
       case 'save': {
-        if (!msg.profile) return;
-        const profiles = loadProfiles(this._context);
+        if (!msg.preset) return;
+        const presets = loadPresets(this._context);
         const oldName: string | undefined = msg.oldName;
-        const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
-        const savingActiveProfile = oldName
+        const activeName: string | undefined = this._context.globalState.get(SELECTED_PRESET_KEY);
+        const savingActivePreset = oldName
           ? activeName === oldName
-          : activeName === msg.profile.name;
+          : activeName === msg.preset.name;
         const idx = oldName
-          ? profiles.findIndex(p => p.name === oldName)
-          : profiles.findIndex(p => p.name === msg.profile!.name);
+          ? presets.findIndex(p => p.name === oldName)
+          : presets.findIndex(p => p.name === msg.preset!.name);
         if (idx >= 0) {
-          profiles[idx] = msg.profile;
+          presets[idx] = msg.preset;
         } else {
-          profiles.push(msg.profile);
+          presets.push(msg.preset);
         }
-        if (savingActiveProfile) {
-          await writeSetting(msg.profile.settingKey, msg.profile.value, getUserSettingsUri(this._context));
+        if (savingActivePreset) {
+          await writeSetting(msg.preset.settingKey, msg.preset.value, getUserSettingsUri(this._context));
         }
-        await this._context.globalState.update(PROFILES_KEY, profiles);
-        if (savingActiveProfile && activeName !== msg.profile.name) {
-          await this._context.globalState.update(SELECTED_PROFILE_KEY, msg.profile.name);
+        await this._context.globalState.update(PRESETS_KEY, presets);
+        if (savingActivePreset && activeName !== msg.preset.name) {
+          await this._context.globalState.update(SELECTED_PRESET_KEY, msg.preset.name);
         }
-        if (savingActiveProfile) {
-          updateStatusBar(this._statusBarItem, msg.profile.name);
+        if (savingActivePreset) {
+          updateStatusBar(this._statusBarItem, msg.preset.name);
         }
         this.refresh();
         break;
       }
 
       case 'activate': {
-        if (!msg.profileName) return;
-        const profiles = loadProfiles(this._context);
-        const profile = profiles.find(p => p.name === msg.profileName);
-        if (!profile) return;
-        await writeSetting(profile.settingKey, profile.value, getUserSettingsUri(this._context));
-        await this._context.globalState.update(SELECTED_PROFILE_KEY, profile.name);
-        updateStatusBar(this._statusBarItem, profile.name);
+        if (!msg.presetName) return;
+        const presets = loadPresets(this._context);
+        const preset = presets.find(p => p.name === msg.presetName);
+        if (!preset) return;
+        await writeSetting(preset.settingKey, preset.value, getUserSettingsUri(this._context));
+        await this._context.globalState.update(SELECTED_PRESET_KEY, preset.name);
+        updateStatusBar(this._statusBarItem, preset.name);
         this.refresh();
 
         const reload = await vscode.window.showInformationMessage(
-          `Profile "${profile.name}" activated. Reload the window to apply changes to settings.json.`,
+          `Preset "${preset.name}" applied. Reload the window to apply changes to settings.json.`,
           'Reload Window',
         );
         if (reload === 'Reload Window') {
@@ -134,25 +134,25 @@ export class ProfileManagerPanel {
       }
 
       case 'delete': {
-        if (!msg.profileName) return;
+        if (!msg.presetName) return;
         const confirm = await vscode.window.showWarningMessage(
-          `Delete profile "${msg.profileName}"? This cannot be undone.`,
+          `Delete preset "${msg.presetName}"? This cannot be undone.`,
           { modal: true },
           'Delete',
         );
         if (confirm !== 'Delete') return;
 
-        const profiles = loadProfiles(this._context);
-        const idx = profiles.findIndex(p => p.name === msg.profileName);
+        const presets = loadPresets(this._context);
+        const idx = presets.findIndex(p => p.name === msg.presetName);
         if (idx >= 0) {
-          const removed = profiles.splice(idx, 1)[0];
-          const activeName: string | undefined = this._context.globalState.get(SELECTED_PROFILE_KEY);
+          const removed = presets.splice(idx, 1)[0];
+          const activeName: string | undefined = this._context.globalState.get(SELECTED_PRESET_KEY);
           if (activeName === removed.name) {
             await clearSetting(removed.settingKey, getUserSettingsUri(this._context));
           }
-          await this._context.globalState.update(PROFILES_KEY, profiles);
+          await this._context.globalState.update(PRESETS_KEY, presets);
           if (activeName === removed.name) {
-            await this._context.globalState.update(SELECTED_PROFILE_KEY, undefined);
+            await this._context.globalState.update(SELECTED_PRESET_KEY, undefined);
             updateStatusBar(this._statusBarItem, undefined);
           }
         }
@@ -165,10 +165,10 @@ export class ProfileManagerPanel {
 
 // ── Status bar helper ─────────────────────────────────────
 
-function updateStatusBar(item: vscode.StatusBarItem, profileName?: string) {
-  if (profileName) {
-    item.text = `$(account) ${profileName}`;
-    item.tooltip = `Active profile: ${profileName}`;
+function updateStatusBar(item: vscode.StatusBarItem, presetName?: string) {
+  if (presetName) {
+    item.text = `$(account) ${presetName}`;
+    item.tooltip = `Active preset: ${presetName}`;
     item.show();
   } else {
     item.hide();
@@ -189,7 +189,7 @@ export async function readUserSettings(uri: vscode.Uri): Promise<Record<string, 
     const text = Buffer.from(raw).toString('utf8');
     return JSON.parse(stripJsonComments(text));
   } catch (err) {
-    console.error('[ProfileManager] Read failed for:', uri.fsPath, err);
+    console.error('[PresetManager] Read failed for:', uri.fsPath, err);
     return {};
   }
 }
@@ -199,18 +199,18 @@ export function isRemote(): boolean {
 }
 
 async function writeSetting(settingKey: string, value: any, settingsUri: vscode.Uri) {
-  console.log('[ProfileManager] === WRITE START ===');
-  console.log('[ProfileManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
-  console.log('[ProfileManager] Key:', settingKey, 'Value:', JSON.stringify(value));
+  console.log('[PresetManager] === WRITE START ===');
+  console.log('[PresetManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
+  console.log('[PresetManager] Key:', settingKey, 'Value:', JSON.stringify(value));
 
   try {
     if (isRemote()) {
-      console.log('[ProfileManager] Remote detected — using config.update');
+      console.log('[PresetManager] Remote detected — using config.update');
       const config = vscode.workspace.getConfiguration();
       await config.update(settingKey, value, vscode.ConfigurationTarget.Global);
     } else {
       const settingsBefore = await readUserSettings(settingsUri);
-      console.log('[ProfileManager] Settings BEFORE:', JSON.stringify(settingsBefore, null, 2));
+      console.log('[PresetManager] Settings BEFORE:', JSON.stringify(settingsBefore, null, 2));
 
       settingsBefore[settingKey] = value;
 
@@ -220,29 +220,29 @@ async function writeSetting(settingKey: string, value: any, settingsUri: vscode.
       const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
       const verifyText = Buffer.from(verifyRaw).toString('utf8');
       const verify = JSON.parse(stripJsonComments(verifyText));
-      console.log('[ProfileManager] Settings AFTER:', JSON.stringify(verify, null, 2));
+      console.log('[PresetManager] Settings AFTER:', JSON.stringify(verify, null, 2));
 
       if (JSON.stringify(verify[settingKey]) === JSON.stringify(value)) {
-        console.log('[ProfileManager] VERIFY: OK');
+        console.log('[PresetManager] VERIFY: OK');
       } else {
-        console.error('[ProfileManager] VERIFY: MISMATCH');
+        console.error('[PresetManager] VERIFY: MISMATCH');
       }
     }
-    console.log('[ProfileManager] === WRITE END ===');
+    console.log('[PresetManager] === WRITE END ===');
   } catch (err) {
-    console.error('[ProfileManager] Write failed:', err);
+    console.error('[PresetManager] Write failed:', err);
     throw err;
   }
 }
 
 async function clearSetting(settingKey: string, settingsUri: vscode.Uri) {
-  console.log('[ProfileManager] === CLEAR START ===');
-  console.log('[ProfileManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
-  console.log('[ProfileManager] Key:', settingKey);
+  console.log('[PresetManager] === CLEAR START ===');
+  console.log('[PresetManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
+  console.log('[PresetManager] Key:', settingKey);
 
   try {
     if (isRemote()) {
-      console.log('[ProfileManager] Remote detected — using config.update');
+      console.log('[PresetManager] Remote detected — using config.update');
       const config = vscode.workspace.getConfiguration();
       await config.update(settingKey, undefined, vscode.ConfigurationTarget.Global);
     } else {
@@ -255,17 +255,17 @@ async function clearSetting(settingKey: string, settingsUri: vscode.Uri) {
       const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
       const verifyText = Buffer.from(verifyRaw).toString('utf8');
       const verify = JSON.parse(stripJsonComments(verifyText));
-      console.log('[ProfileManager] Settings AFTER:', JSON.stringify(verify, null, 2));
+      console.log('[PresetManager] Settings AFTER:', JSON.stringify(verify, null, 2));
 
       if (!(settingKey in verify)) {
-        console.log('[ProfileManager] VERIFY: OK');
+        console.log('[PresetManager] VERIFY: OK');
       } else {
-        console.error('[ProfileManager] VERIFY: MISMATCH');
+        console.error('[PresetManager] VERIFY: MISMATCH');
       }
     }
-    console.log('[ProfileManager] === CLEAR END ===');
+    console.log('[PresetManager] === CLEAR END ===');
   } catch (err) {
-    console.error('[ProfileManager] Clear failed:', err);
+    console.error('[PresetManager] Clear failed:', err);
     throw err;
   }
 }
