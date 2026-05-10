@@ -67,6 +67,30 @@ body {
   background: var(--vscode-badge-background); color: var(--vscode-badge-foreground);
 }
 .active-pill.inactive { opacity: 0.4; }
+.form-row { margin-bottom: 10px; }
+.form-row label {
+  display: block; font-size: 11px; font-weight: 500;
+  color: var(--vscode-descriptionForeground); margin-bottom: 4px;
+}
+#settingKey, #settingValue {
+  width: 100%; padding: 5px 8px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, #3c3c3c);
+  border-radius: 2px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+}
+#templateSelect {
+  width: 100%; padding: 5px 8px;
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border, #3c3c3c);
+  border-radius: 2px;
+  font-family: var(--vscode-font-family);
+  font-size: 12px;
+}
+.hint { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: 4px; }
 .ev-name, .ev-value {
   width: 100%; padding: 4px 6px;
   background: var(--vscode-input-background);

@@ -38,6 +38,7 @@ const $ = (id: string) => document.getElementById(id)!;
 const profileNameInput = $('profileName') as HTMLInputElement;
 const settingKeyInput = $('settingKey') as HTMLInputElement;
 const settingValueInput = $('settingValue') as HTMLTextAreaElement;
+const templateSelect = $('templateSelect') as HTMLSelectElement;
 
 // ── Render helpers ────────────────────────────────────────
 
@@ -47,6 +48,7 @@ function loadProfile(profile: SettingProfile): void {
   profileNameInput.value = profile.name;
   settingKeyInput.value = profile.settingKey;
   settingValueInput.value = JSON.stringify(profile.value, null, 2);
+  templateSelect.value = TEMPLATES[profile.settingKey] ? profile.settingKey : '';
   $('deleteBtn')!.disabled = false;
   $('activateBtn')!.disabled = false;
   $('emptyState')!.style.display = 'none';
@@ -85,6 +87,26 @@ function updateBadge(): void {
   }
 }
 
+interface ProfileTemplate {
+  settingKey: string;
+  value: any;
+}
+
+const TEMPLATES: Record<string, ProfileTemplate> = {
+  'claudeCode.environmentVariables': {
+    settingKey: 'claudeCode.environmentVariables',
+    value: [{ name: '', value: '' }],
+  },
+  'python.defaultInterpreterPath': {
+    settingKey: 'python.defaultInterpreterPath',
+    value: '/usr/bin/python3',
+  },
+  'git.path': {
+    settingKey: 'git.path',
+    value: '/usr/bin/git',
+  },
+};
+
 function nextProfileName(): string {
   let max = 0;
   const re = /^profile-(\d+)$/;
@@ -104,6 +126,7 @@ function clearForm(): void {
   profileNameInput.value = '';
   settingKeyInput.value = '';
   settingValueInput.value = '';
+  templateSelect.value = '';
   $('deleteBtn')!.disabled = true;
   $('activateBtn')!.disabled = true;
   $('emptyState')!.style.display = 'flex';
@@ -178,6 +201,17 @@ document.getElementById('profileList')!.addEventListener('click', (e) => {
   const name = (item.dataset as DOMStringMap).name;
   const p = profiles.find((p) => p.name === name);
   if (p) loadProfile(p);
+});
+
+// ── Event: Template select ───────────────────────────────
+
+document.getElementById('templateSelect')!.addEventListener('change', () => {
+  const key = templateSelect.value;
+  if (key && TEMPLATES[key]) {
+    const t = TEMPLATES[key];
+    settingKeyInput.value = t.settingKey;
+    settingValueInput.value = JSON.stringify(t.value, null, 2);
+  }
 });
 
 // ── Event: + New Profile button ──────────────────────────

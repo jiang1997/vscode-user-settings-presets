@@ -32,6 +32,15 @@
       <div class="card">
         <div class="card-header">Setting</div>
         <div class="form-row">
+          <label for="templateSelect">Template</label>
+          <select id="templateSelect">
+            <option value="">Custom (blank)</option>
+            <option value="claudeCode.environmentVariables">Claude Code: Environment Variables</option>
+            <option value="python.defaultInterpreterPath">Python: Default Interpreter Path</option>
+            <option value="git.path">Git: Executable Path</option>
+          </select>
+        </div>
+        <div class="form-row">
           <label for="settingKey">Setting Key</label>
           <input type="text" id="settingKey" placeholder="e.g. python.defaultInterpreterPath" />
         </div>
