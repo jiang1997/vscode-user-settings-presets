@@ -54,7 +54,6 @@ function loadPreset(preset: SettingPreset): void {
   $('emptyState')!.style.display = 'none';
   $('editorContent')!.classList.add('visible');
   rebuildSidebar(preset.name);
-  updateBadge();
 }
 
 function rebuildSidebar(keepName: string): void {
@@ -64,27 +63,9 @@ function rebuildSidebar(keepName: string): void {
     const div = document.createElement('div');
     div.className = 'preset-item' + (p.name === keepName ? ' active' : '');
     (div.dataset as DOMStringMap).name = p.name;
-    const dot = document.createElement('span');
-    dot.className = 'dot';
-    dot.textContent = p.name === activePresetName ? '●' : '○';
-    div.appendChild(dot);
-    div.appendChild(document.createTextNode(p.name));
+    div.textContent = p.name;
     list.appendChild(div);
   });
-}
-
-function updateBadge(): void {
-  const b = $('activeBadge');
-  const isActive = activePresetName !== null && currentPresetName === activePresetName;
-  if (isActive) {
-    b.textContent = '● Active';
-    b.title = 'This preset is currently active';
-    b.className = 'active-pill';
-  } else {
-    b.textContent = 'Not active';
-    b.title = 'Click Apply to switch to this preset';
-    b.className = 'active-pill inactive';
-  }
 }
 
 interface PresetTemplate {
@@ -137,11 +118,10 @@ function clearForm(): void {
 function handleInit(data: InitMessage): void {
   presets = data.presets || [];
   activePresetName = data.activePresetName;
-  updateBadge();
 
   let keepName = currentPresetName;
   if (keepName && presets.every((p) => p.name !== keepName)) {
-    keepName = activePresetName || (presets.length > 0 ? presets[0].name : '');
+    keepName = presets.length > 0 ? presets[0].name : '';
   }
   rebuildSidebar(keepName);
 
@@ -149,10 +129,7 @@ function handleInit(data: InitMessage): void {
     const p = presets.find((p) => p.name === keepName);
     if (p) loadPreset(p);
   } else if (presets.length > 0) {
-    const first = activePresetName
-      ? presets.find((p) => p.name === activePresetName)
-      : presets[0];
-    if (first) loadPreset(first);
+    loadPreset(presets[0]);
   } else {
     clearForm();
   }

@@ -61,12 +61,7 @@ body {
   border-radius: 2px; font-family: var(--vscode-font-family); font-size: 14px; font-weight: 500;
 }
 .preset-header input:focus { outline: 1px solid var(--vscode-focusBorder, #007acc); outline-offset: -1px; }
-.active-pill {
-  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
-  padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
-  background: var(--vscode-badge-background); color: var(--vscode-badge-foreground);
-}
-.active-pill.inactive { opacity: 0.4; }
+.preset-item .dot { font-size: 10px; flex-shrink: 0; }
 .form-row { margin-bottom: 10px; }
 .form-row label {
   display: block; font-size: 11px; font-weight: 500;
