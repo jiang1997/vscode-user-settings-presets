@@ -2,7 +2,7 @@
   "name": "vscode-settings-profile-manager",
   "displayName": "VS Code: Settings Profile Manager",
   "description": "Manage multiple VS Code: setting profiles and switch between them without manually editing settings.json.",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "publisher": "jiang1997",
   "engines": {
     "vscode": "^1.75.0"
