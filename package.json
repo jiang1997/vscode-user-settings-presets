@@ -25,7 +25,7 @@
       {
         "command": "userSettingsPresets.manage",
         "title": "Manage Presets",
-        "category": "Settings Presets"
+        "category": "User Settings Presets"
       }
     ]
   },
