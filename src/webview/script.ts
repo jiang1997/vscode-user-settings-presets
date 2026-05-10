@@ -50,7 +50,7 @@ function loadPreset(preset: SettingPreset): void {
   settingValueInput.value = JSON.stringify(preset.value, null, 2);
   templateSelect.value = TEMPLATES[preset.settingKey] ? preset.settingKey : '';
   $('deleteBtn')!.disabled = false;
-  $('activateBtn')!.disabled = false;
+  $('applyBtn')!.disabled = false;
   $('emptyState')!.style.display = 'none';
   $('editorContent')!.classList.add('visible');
   rebuildSidebar(preset.name);
@@ -82,7 +82,7 @@ function updateBadge(): void {
     b.className = 'active-pill';
   } else {
     b.textContent = 'Not active';
-    b.title = 'Click Activate to switch to this preset';
+    b.title = 'Click Apply to switch to this preset';
     b.className = 'active-pill inactive';
   }
 }
@@ -128,7 +128,7 @@ function clearForm(): void {
   settingValueInput.value = '';
   templateSelect.value = '';
   $('deleteBtn')!.disabled = true;
-  $('activateBtn')!.disabled = true;
+  $('applyBtn')!.disabled = true;
   $('emptyState')!.style.display = 'flex';
   $('editorContent')!.classList.remove('visible');
   rebuildSidebar('');
@@ -260,11 +260,11 @@ document.getElementById('saveBtn')!.addEventListener('click', () => {
   originalPresetName = result.preset.name;
 });
 
-// ── Event: Activate ──────────────────────────────────────
+// ── Event: Apply ─────────────────────────────────────────
 
-document.getElementById('activateBtn')!.addEventListener('click', () => {
+document.getElementById('applyBtn')!.addEventListener('click', () => {
   if (!currentPresetName) return;
-  vscode.postMessage({ command: 'activate', presetName: currentPresetName });
+  vscode.postMessage({ command: 'apply', presetName: currentPresetName });
 });
 
 // ── Start: tell extension we're ready ────────────────────

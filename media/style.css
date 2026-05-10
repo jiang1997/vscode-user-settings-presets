@@ -154,7 +154,7 @@ td.act { width: 30px; text-align: center; }
   color: var(--vscode-errorForeground);
 }
 #deleteBtn:hover { background: var(--vscode-toolbar-hoverBackground); }
-#deleteBtn:disabled, #activateBtn:disabled { opacity: 0.4; cursor: default; }
+#deleteBtn:disabled, #applyBtn:disabled { opacity: 0.4; cursor: default; }
 .btn {
   padding: 5px 16px; border-radius: 2px; font-size: 13px;
   cursor: pointer; border: 1px solid transparent;
@@ -164,8 +164,8 @@ td.act { width: 30px; text-align: center; }
   color: var(--vscode-button-secondaryForeground);
 }
 #saveBtn:hover { background: var(--vscode-button-secondaryHoverBackground); }
-#activateBtn {
+#applyBtn {
   background: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
 }
-#activateBtn:hover { background: var(--vscode-button-hoverBackground); }
+#applyBtn:hover { background: var(--vscode-button-hoverBackground); }

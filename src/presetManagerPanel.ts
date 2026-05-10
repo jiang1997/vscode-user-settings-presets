@@ -113,7 +113,7 @@ export class PresetManagerPanel {
         break;
       }
 
-      case 'activate': {
+      case 'apply': {
         if (!msg.presetName) return;
         const presets = loadPresets(this._context);
         const preset = presets.find(p => p.name === msg.presetName);
