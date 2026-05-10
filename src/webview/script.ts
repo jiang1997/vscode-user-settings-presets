@@ -211,6 +211,9 @@ document.getElementById('templateSelect')!.addEventListener('change', () => {
     const t = TEMPLATES[key];
     settingKeyInput.value = t.settingKey;
     settingValueInput.value = JSON.stringify(t.value, null, 2);
+  } else {
+    settingKeyInput.value = '';
+    settingValueInput.value = '';
   }
 });
 
