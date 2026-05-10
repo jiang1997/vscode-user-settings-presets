@@ -8,7 +8,7 @@ A VS Code: extension to save multiple preset values for any setting key in `sett
 
 ## Usage
 
-Open via **Command Palette** (`Ctrl+Shift+P` → `Settings Presets: Manage Presets`) or click the active preset name in the status bar.
+Open via **Command Palette** (`Ctrl+Shift+P` → `User Settings Presets: Manage Presets`) or click the active preset name in the status bar.
 
 ### Managing Presets
 
