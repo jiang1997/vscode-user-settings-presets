@@ -8,13 +8,13 @@ A VS Code: extension to save multiple preset values for any setting key in `sett
 
 ## Usage
 
-Open via **Command Palette** (`Ctrl+Shift+P` → `User Settings Presets: Manage Presets`) or click the active preset name in the status bar.
+Open via **Command Palette** (`Ctrl+Shift+P` → `User Settings Presets: Manage Presets`).
 
 ### Managing Presets
 
-- **Left sidebar** — lists all saved presets. `●` marks the active one, `○` inactive ones. Click a preset to load it for editing.
-- **Preset card** — shows the preset name and whether it's currently active.
-- **Setting card** — enter the setting key (e.g., `python.defaultInterpreterPath`) and a JSON value. Strings need quotes; numbers and booleans do not.
+- **Left sidebar** — lists all saved presets. Click a preset to load it for editing; the highlighted item is the one currently open in the editor.
+- **Preset card** — an editable preset name field.
+- **Setting card** — pick a **Template** for common keys (Claude Code env vars, Python interpreter, Git path) to auto-fill, or enter the setting key (e.g., `python.defaultInterpreterPath`) and a JSON value manually. Strings need quotes; numbers and booleans do not.
 
 ### Example: Switch Claude Code: Provider
 
@@ -50,7 +50,7 @@ Create two presets with the same setting key `claudeCode.environmentVariables`, 
 ]
 ```
 
-Activate either preset and reload the window — Claude Code: will use the corresponding provider immediately.
+Click **Apply** on either preset, then choose **Reload Window** in the notification — Claude Code will use the corresponding provider immediately.
 
 ## Build
 
