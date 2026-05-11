@@ -10,3 +10,5 @@ package-lock.json
 docs/**
 *.png
 *.vsix
+out/test/**
+.vscode-test-user-data/**

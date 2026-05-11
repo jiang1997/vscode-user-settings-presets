@@ -12,7 +12,11 @@
     "url": "https://github.com/jiang1997/vscode-user-settings-presets"
   },
   "license": "MIT",
-  "keywords": ["settings", "presets", "configuration"],
+  "keywords": [
+    "settings",
+    "presets",
+    "configuration"
+  ],
   "categories": [
     "Other"
   ],
@@ -35,13 +39,16 @@
     "compile:webview": "esbuild src/webview/script.ts --bundle --outfile=out/webview/script.js --format=iife",
     "watch": "tsc -watch -p ./",
     "watch:webview": "esbuild src/webview/script.ts --bundle --outfile=out/webview/script.js --format=iife --watch",
-    "test": "npm run compile && mocha out/test/**/*.test.js",
+    "test:unit": "mocha \"out/test/unit/**/*.test.js\"",
+    "test:e2e": "node ./out/test/e2e/runTest.js",
+    "test": "npm run compile && npm run test:unit && npm run test:e2e",
     "package": "vsce package"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "^18.19.130",
     "@types/vscode": "^1.75.0",
+    "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.0.0",
     "esbuild": "^0.28.0",
     "mocha": "^11.7.5",

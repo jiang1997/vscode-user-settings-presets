@@ -1,32 +1,6 @@
 import * as assert from 'assert';
-import { SettingPreset } from '../types';
-
-// ── Pure-logic extracts from PresetManagerPanel ──────────
-
-function upsertPreset(presets: SettingPreset[], preset: SettingPreset, oldName?: string): SettingPreset[] {
-  const idx = oldName
-    ? presets.findIndex(p => p.name === oldName)
-    : presets.findIndex(p => p.name === preset.name);
-  if (idx >= 0) {
-    presets[idx] = preset;
-  } else {
-    presets.push(preset);
-  }
-  return presets;
-}
-
-function deletePreset(presets: SettingPreset[], name: string): SettingPreset[] {
-  const idx = presets.findIndex(p => p.name === name);
-  if (idx >= 0) presets.splice(idx, 1);
-  return presets;
-}
-
-function resolveActiveAfterDelete(presets: SettingPreset[], activeName: string | undefined, deletedName: string): string | undefined {
-  if (activeName === deletedName) return undefined;
-  return activeName;
-}
-
-// ── Tests ─────────────────────────────────────────────────
+import { SettingPreset } from '../../types';
+import { upsertPreset, deletePreset, resolveActiveAfterDelete, findPreset, resolveActiveAfterSave } from '../../lib/presetOps';
 
 const samplePreset: SettingPreset = {
   name: 'prod',
@@ -34,7 +8,7 @@ const samplePreset: SettingPreset = {
   value: [{ name: 'ANTHROPIC_BASE_URL', value: 'https://api.example.com' }],
 };
 
-describe('Preset CRUD', () => {
+describe('presetOps', () => {
   describe('upsertPreset', () => {
     it('adds a new preset', () => {
       const presets: SettingPreset[] = [];
@@ -66,6 +40,13 @@ describe('Preset CRUD', () => {
       const result = upsertPreset(presets, samplePreset, 'prod');
       assert.strictEqual(result.length, 1);
     });
+
+    it('does not mutate the input array', () => {
+      const presets = [JSON.parse(JSON.stringify(samplePreset))];
+      const snapshot = JSON.parse(JSON.stringify(presets));
+      upsertPreset(presets, { name: 'newer', settingKey: 'k', value: 1 });
+      assert.deepStrictEqual(presets, snapshot);
+    });
   });
 
   describe('deletePreset', () => {
@@ -80,19 +61,53 @@ describe('Preset CRUD', () => {
       const result = deletePreset(presets, 'nonexistent');
       assert.strictEqual(result.length, 1);
     });
+
+    it('does not mutate the input array', () => {
+      const presets = [JSON.parse(JSON.stringify(samplePreset))];
+      const snapshot = JSON.parse(JSON.stringify(presets));
+      deletePreset(presets, 'prod');
+      assert.deepStrictEqual(presets, snapshot);
+    });
   });
 
   describe('resolveActiveAfterDelete', () => {
     it('clears active when deleted preset was active', () => {
-      assert.strictEqual(resolveActiveAfterDelete([], 'prod', 'prod'), undefined);
+      assert.strictEqual(resolveActiveAfterDelete('prod', 'prod'), undefined);
     });
 
     it('keeps active when another preset was deleted', () => {
-      assert.strictEqual(resolveActiveAfterDelete([], 'staging', 'prod'), 'staging');
+      assert.strictEqual(resolveActiveAfterDelete('staging', 'prod'), 'staging');
     });
 
     it('keeps undefined when nothing was active', () => {
-      assert.strictEqual(resolveActiveAfterDelete([], undefined, 'prod'), undefined);
+      assert.strictEqual(resolveActiveAfterDelete(undefined, 'prod'), undefined);
+    });
+  });
+
+  describe('findPreset', () => {
+    it('returns the preset when found by name', () => {
+      const presets = [samplePreset];
+      const result = findPreset(presets, 'prod');
+      assert.strictEqual(result?.name, 'prod');
+    });
+
+    it('returns undefined when name not found', () => {
+      const result = findPreset([samplePreset], 'nonexistent');
+      assert.strictEqual(result, undefined);
+    });
+  });
+
+  describe('resolveActiveAfterSave', () => {
+    it('returns newName when the active preset is being renamed', () => {
+      assert.strictEqual(resolveActiveAfterSave('prod', 'prod', 'production'), 'production');
+    });
+
+    it('returns newName when overwriting the currently-active preset with the same name', () => {
+      assert.strictEqual(resolveActiveAfterSave('prod', undefined, 'prod'), 'prod');
+    });
+
+    it('returns activeName when saving an unrelated preset', () => {
+      assert.strictEqual(resolveActiveAfterSave('prod', undefined, 'staging'), 'prod');
     });
   });
 });
