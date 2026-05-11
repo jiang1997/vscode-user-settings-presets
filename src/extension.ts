@@ -7,6 +7,7 @@ export function activate(context: vscode.ExtensionContext) {
       PresetManagerPanel.show(context);
     }),
   );
+  return { context };
 }
 
 export function deactivate() {}
