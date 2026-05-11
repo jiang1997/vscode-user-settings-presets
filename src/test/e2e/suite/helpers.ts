@@ -38,6 +38,9 @@ export async function readSettings(ctx: vscode.ExtensionContext): Promise<Record
 let originalShowInformationMessage: typeof vscode.window.showInformationMessage | undefined;
 
 export function stubReloadPrompt(): void {
+  if (originalShowInformationMessage !== undefined) {
+    throw new Error('stubReloadPrompt called while already stubbed; pair each call with restoreReloadPrompt');
+  }
   originalShowInformationMessage = vscode.window.showInformationMessage;
   (vscode.window as any).showInformationMessage = () => Promise.resolve(undefined);
 }
