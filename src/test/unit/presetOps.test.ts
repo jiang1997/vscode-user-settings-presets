@@ -1,32 +1,6 @@
 import * as assert from 'assert';
-import { SettingPreset } from '../types';
-
-// ── Pure-logic extracts from PresetManagerPanel ──────────
-
-function upsertPreset(presets: SettingPreset[], preset: SettingPreset, oldName?: string): SettingPreset[] {
-  const idx = oldName
-    ? presets.findIndex(p => p.name === oldName)
-    : presets.findIndex(p => p.name === preset.name);
-  if (idx >= 0) {
-    presets[idx] = preset;
-  } else {
-    presets.push(preset);
-  }
-  return presets;
-}
-
-function deletePreset(presets: SettingPreset[], name: string): SettingPreset[] {
-  const idx = presets.findIndex(p => p.name === name);
-  if (idx >= 0) presets.splice(idx, 1);
-  return presets;
-}
-
-function resolveActiveAfterDelete(presets: SettingPreset[], activeName: string | undefined, deletedName: string): string | undefined {
-  if (activeName === deletedName) return undefined;
-  return activeName;
-}
-
-// ── Tests ─────────────────────────────────────────────────
+import { SettingPreset } from '../../types';
+import { upsertPreset, deletePreset, resolveActiveAfterDelete } from '../../lib/presetOps';
 
 const samplePreset: SettingPreset = {
   name: 'prod',
@@ -34,7 +8,7 @@ const samplePreset: SettingPreset = {
   value: [{ name: 'ANTHROPIC_BASE_URL', value: 'https://api.example.com' }],
 };
 
-describe('Preset CRUD', () => {
+describe('presetOps', () => {
   describe('upsertPreset', () => {
     it('adds a new preset', () => {
       const presets: SettingPreset[] = [];
@@ -84,15 +58,15 @@ describe('Preset CRUD', () => {
 
   describe('resolveActiveAfterDelete', () => {
     it('clears active when deleted preset was active', () => {
-      assert.strictEqual(resolveActiveAfterDelete([], 'prod', 'prod'), undefined);
+      assert.strictEqual(resolveActiveAfterDelete('prod', 'prod'), undefined);
     });
 
     it('keeps active when another preset was deleted', () => {
-      assert.strictEqual(resolveActiveAfterDelete([], 'staging', 'prod'), 'staging');
+      assert.strictEqual(resolveActiveAfterDelete('staging', 'prod'), 'staging');
     });
 
     it('keeps undefined when nothing was active', () => {
-      assert.strictEqual(resolveActiveAfterDelete([], undefined, 'prod'), undefined);
+      assert.strictEqual(resolveActiveAfterDelete(undefined, 'prod'), undefined);
     });
   });
 });
