@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { SettingPreset } from '../../types';
-import { upsertPreset, deletePreset, resolveActiveAfterDelete } from '../../lib/presetOps';
+import { upsertPreset, deletePreset, resolveActiveAfterDelete, findPreset, resolveActiveAfterSave } from '../../lib/presetOps';
 
 const samplePreset: SettingPreset = {
   name: 'prod',
@@ -81,6 +81,33 @@ describe('presetOps', () => {
 
     it('keeps undefined when nothing was active', () => {
       assert.strictEqual(resolveActiveAfterDelete(undefined, 'prod'), undefined);
+    });
+  });
+
+  describe('findPreset', () => {
+    it('returns the preset when found by name', () => {
+      const presets = [samplePreset];
+      const result = findPreset(presets, 'prod');
+      assert.strictEqual(result?.name, 'prod');
+    });
+
+    it('returns undefined when name not found', () => {
+      const result = findPreset([samplePreset], 'nonexistent');
+      assert.strictEqual(result, undefined);
+    });
+  });
+
+  describe('resolveActiveAfterSave', () => {
+    it('returns newName when the active preset is being renamed', () => {
+      assert.strictEqual(resolveActiveAfterSave('prod', 'prod', 'production'), 'production');
+    });
+
+    it('returns newName when overwriting the currently-active preset with the same name', () => {
+      assert.strictEqual(resolveActiveAfterSave('prod', undefined, 'prod'), 'prod');
+    });
+
+    it('returns activeName when saving an unrelated preset', () => {
+      assert.strictEqual(resolveActiveAfterSave('prod', undefined, 'staging'), 'prod');
     });
   });
 });

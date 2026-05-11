@@ -34,3 +34,19 @@ export function resolveActiveAfterDelete(
 ): string | undefined {
   return activeName === deletedName ? undefined : activeName;
 }
+
+export function findPreset(
+  presets: readonly SettingPreset[],
+  name: string,
+): SettingPreset | undefined {
+  return presets.find(p => p.name === name);
+}
+
+export function resolveActiveAfterSave(
+  activeName: string | undefined,
+  oldName: string | undefined,
+  newName: string,
+): string | undefined {
+  const targetedName = oldName ?? newName;
+  return activeName === targetedName ? newName : activeName;
+}
