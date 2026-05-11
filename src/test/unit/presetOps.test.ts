@@ -40,6 +40,13 @@ describe('presetOps', () => {
       const result = upsertPreset(presets, samplePreset, 'prod');
       assert.strictEqual(result.length, 1);
     });
+
+    it('does not mutate the input array', () => {
+      const presets = [JSON.parse(JSON.stringify(samplePreset))];
+      const snapshot = JSON.parse(JSON.stringify(presets));
+      upsertPreset(presets, { name: 'newer', settingKey: 'k', value: 1 });
+      assert.deepStrictEqual(presets, snapshot);
+    });
   });
 
   describe('deletePreset', () => {
@@ -53,6 +60,13 @@ describe('presetOps', () => {
       const presets = [JSON.parse(JSON.stringify(samplePreset))];
       const result = deletePreset(presets, 'nonexistent');
       assert.strictEqual(result.length, 1);
+    });
+
+    it('does not mutate the input array', () => {
+      const presets = [JSON.parse(JSON.stringify(samplePreset))];
+      const snapshot = JSON.parse(JSON.stringify(presets));
+      deletePreset(presets, 'prod');
+      assert.deepStrictEqual(presets, snapshot);
     });
   });
 
