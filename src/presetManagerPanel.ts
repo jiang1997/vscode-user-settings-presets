@@ -91,6 +91,11 @@ export class PresetManagerPanel {
       case 'save':   await this.handleSave(msg);   return;
       case 'apply':  await this.handleApply(msg);  return;
       case 'delete': await this.handleDelete(msg); return;
+      default: {
+        const _exhaustive: never = msg;
+        void _exhaustive;
+        return;
+      }
     }
   }
 
