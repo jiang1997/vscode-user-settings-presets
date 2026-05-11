@@ -9,6 +9,8 @@ import {
   readSettings,
   stubReloadPrompt,
   restoreReloadPrompt,
+  stubDeleteConfirm,
+  restoreDeleteConfirm,
 } from './helpers';
 
 describe('CRUD', () => {
@@ -29,10 +31,7 @@ describe('CRUD', () => {
     await panel.handleSave({ preset });
 
     const presets = ctx.globalState.get<SettingPreset[]>(PRESETS_KEY) ?? [];
-    assert.strictEqual(presets.length, 1);
-    assert.strictEqual(presets[0].name, 'p1');
-    assert.strictEqual(presets[0].settingKey, 'foo');
-    assert.strictEqual(presets[0].value, 1);
+    assert.deepStrictEqual(presets, [preset]);
   });
 
   it('save modification updates existing preset by name', async () => {
@@ -60,8 +59,7 @@ describe('CRUD', () => {
   });
 
   it('delete removes preset from globalState', async () => {
-    const original = vscode.window.showWarningMessage;
-    (vscode.window as any).showWarningMessage = () => Promise.resolve('Delete');
+    stubDeleteConfirm();
     try {
       const preset: SettingPreset = { name: 'p1', settingKey: 'foo', value: 1 };
       await panel.handleSave({ preset });
@@ -71,7 +69,7 @@ describe('CRUD', () => {
       const presets = ctx.globalState.get<SettingPreset[]>(PRESETS_KEY) ?? [];
       assert.strictEqual(presets.length, 0);
     } finally {
-      (vscode.window as any).showWarningMessage = original;
+      restoreDeleteConfirm();
     }
   });
 });

@@ -13,6 +13,11 @@ export async function getExtensionContext(): Promise<vscode.ExtensionContext> {
   return (ext.exports as { context: vscode.ExtensionContext }).context;
 }
 
+// Note: PresetManagerPanel.instance is a static singleton. After the first
+// call, subsequent openPanel() invocations return the same instance (the
+// `show` command calls `_panel.reveal()` rather than constructing a new
+// panel). Tests that mutate state via panel.handleX(...) are safe because
+// resetState() clears the underlying globalState the panel reads from.
 export async function openPanel(): Promise<PresetManagerPanel> {
   await vscode.commands.executeCommand('userSettingsPresets.manage');
   const panel = PresetManagerPanel.instance;
@@ -49,5 +54,22 @@ export function restoreReloadPrompt(): void {
   if (originalShowInformationMessage) {
     (vscode.window as any).showInformationMessage = originalShowInformationMessage;
     originalShowInformationMessage = undefined;
+  }
+}
+
+let originalShowWarningMessage: typeof vscode.window.showWarningMessage | undefined;
+
+export function stubDeleteConfirm(): void {
+  if (originalShowWarningMessage !== undefined) {
+    throw new Error('stubDeleteConfirm called while already stubbed; pair each call with restoreDeleteConfirm');
+  }
+  originalShowWarningMessage = vscode.window.showWarningMessage;
+  (vscode.window as any).showWarningMessage = () => Promise.resolve('Delete');
+}
+
+export function restoreDeleteConfirm(): void {
+  if (originalShowWarningMessage) {
+    (vscode.window as any).showWarningMessage = originalShowWarningMessage;
+    originalShowWarningMessage = undefined;
   }
 }
