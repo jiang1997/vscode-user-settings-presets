@@ -35,7 +35,9 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./ && npm run compile:webview",
+    "compile": "tsc -p ./ && npm run compile:extension && npm run compile:webview",
+    "check-types": "tsc -p ./ --noEmit",
+    "compile:extension": "esbuild src/extension.ts --bundle --platform=node --target=node18 --external:vscode --format=cjs --outfile=out/extension.js",
     "compile:webview": "esbuild src/webview/script.ts --bundle --outfile=out/webview/script.js --format=iife",
     "watch": "tsc -watch -p ./",
     "watch:webview": "esbuild src/webview/script.ts --bundle --outfile=out/webview/script.js --format=iife --watch",

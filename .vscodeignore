@@ -3,6 +3,7 @@
 src/**
 **/*.map
 **/tsconfig.json
+**/tsconfig.*.json
 .gitignore
 .gitattributes
 .git/**
@@ -11,5 +12,9 @@ docs/**
 *.png
 *.vsix
 out/test/**
+out/presetManagerPanel.js
+out/types.js
+out/lib/**
+node_modules/**
 .vscode-test-user-data/**
 eslint.config.mjs
