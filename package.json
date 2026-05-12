@@ -2,7 +2,7 @@
   "name": "user-settings-presets",
   "displayName": "User Settings Presets",
   "description": "Save multiple preset values for any setting key in settings.json and switch between them instantly.",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "publisher": "jiang1997",
   "engines": {
     "vscode": "^1.75.0"
