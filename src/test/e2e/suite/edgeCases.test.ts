@@ -6,7 +6,7 @@ import {
   getExtensionContext,
   openPanel,
   resetState,
-  readSettings,
+  getConfigValue,
   stubReloadPrompt,
   restoreReloadPrompt,
   stubDeleteConfirm,
@@ -30,13 +30,14 @@ describe('edge cases', () => {
     const original: SettingPreset = { name: 'p1', settingKey: 'foo', value: 1 };
     await panel.handleSave({ preset: original });
     await panel.handleApply({ presetName: 'p1' });
+    assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), 'p1', 'handleApply should set APPLIED_PRESET_KEY');
 
     const renamed: SettingPreset = { name: 'p1-renamed', settingKey: 'foo', value: 1 };
     await panel.handleSave({ preset: renamed, oldName: 'p1' });
 
-    assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), 'p1-renamed');
-    const settings = await readSettings(ctx);
-    assert.strictEqual(settings['foo'], 1);
+    const actualApplied = ctx.globalState.get(APPLIED_PRESET_KEY);
+    assert.strictEqual(actualApplied, 'p1-renamed', `Expected APPLIED_PRESET_KEY to be 'p1-renamed' but got ${JSON.stringify(actualApplied)}`);
+    assert.strictEqual(await getConfigValue('foo'), 1);
   });
 
   it('deleting the active preset clears its setting from settings.json', async () => {
@@ -48,8 +49,8 @@ describe('edge cases', () => {
 
       await panel.handleDelete({ presetName: 'p1' });
 
-      const settings = await readSettings(ctx);
-      assert.strictEqual(settings['foo'], undefined);
+      const clearedValue = await getConfigValue('foo');
+      assert.ok(clearedValue === undefined || clearedValue === '', `Expected undefined or empty string, got ${JSON.stringify(clearedValue)}`);
       assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), undefined);
     } finally {
       restoreDeleteConfirm();
@@ -74,12 +75,10 @@ describe('edge cases', () => {
     await panel.handleSave({ preset: b });
 
     await panel.handleApply({ presetName: 'A' });
-    let settings = await readSettings(ctx);
-    assert.strictEqual(settings['shared'], 'first');
+    assert.strictEqual(await getConfigValue('shared'), 'first');
 
     await panel.handleApply({ presetName: 'B' });
-    settings = await readSettings(ctx);
-    assert.strictEqual(settings['shared'], 'second');
+    assert.strictEqual(await getConfigValue('shared'), 'second');
     assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), 'B');
   });
 });

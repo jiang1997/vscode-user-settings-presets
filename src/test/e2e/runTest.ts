@@ -8,9 +8,9 @@ async function main() {
     const userDataDir = path.resolve(__dirname, '../../../.vscode-test-user-data');
 
     await runTests({
-      extensionDevelopmentPath,
+      extensionDevelopmentPath: [extensionDevelopmentPath, path.resolve(__dirname, '../../../src/test/e2e/mock-ext')],
       extensionTestsPath,
-      launchArgs: ['--disable-extensions', '--user-data-dir', userDataDir],
+      launchArgs: ['--user-data-dir', userDataDir],
     });
   } catch (err) {
     console.error('Failed to run tests:', err);

@@ -50,6 +50,10 @@ export async function readSettings(ctx: vscode.ExtensionContext): Promise<Record
   return readUserSettings(getUserSettingsUri(ctx));
 }
 
+export async function getConfigValue(key: string): Promise<unknown> {
+  return vscode.workspace.getConfiguration().get(key);
+}
+
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 type MutableWindow = Mutable<typeof vscode.window>;
 

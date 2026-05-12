@@ -9,6 +9,7 @@ export default tseslint.config(
       "node_modules/**",
       ".vscode-test/**",
       ".vscode-test-user-data/**",
+      "src/test/e2e/mock-ext/**",
       "*.vsix",
     ],
   },

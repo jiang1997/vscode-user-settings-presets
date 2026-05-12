@@ -6,7 +6,7 @@ import {
   getExtensionContext,
   openPanel,
   resetState,
-  readSettings,
+  getConfigValue,
   stubReloadPrompt,
   restoreReloadPrompt,
   stubDeleteConfirm,
@@ -53,8 +53,7 @@ describe('CRUD', () => {
 
     await panel.handleApply({ presetName: 'p1' });
 
-    const settings = await readSettings(ctx);
-    assert.strictEqual(settings['foo'], 42);
+    assert.strictEqual(await getConfigValue('foo'), 42);
     assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), 'p1');
   });
 
