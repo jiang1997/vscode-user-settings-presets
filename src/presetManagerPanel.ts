@@ -1,9 +1,30 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { randomBytes } from 'crypto';
 import stripJsonComments from 'strip-json-comments';
 import { SettingPreset, loadPresets, PRESETS_KEY, SELECTED_PRESET_KEY } from './types';
 import { upsertPreset, deletePreset, resolveActiveAfterDelete, resolveActiveAfterSave } from './lib/presetOps';
+
+let log: vscode.OutputChannel | undefined;
+
+export function setOutputChannel(channel: vscode.OutputChannel): void {
+  log = channel;
+}
+
+function formatError(err: unknown): string {
+  if (err instanceof Error) {
+    return err.stack ?? `${err.name}: ${err.message}`;
+  }
+  return String(err);
+}
+
+function notifyError(operation: string, err: unknown): void {
+  log?.appendLine(`[ERROR] ${operation} failed: ${formatError(err)}`);
+  void vscode.window.showErrorMessage(
+    `User Settings Presets: failed to ${operation}. See the "User Settings Presets" output channel for details.`,
+  );
+}
 
 type IncomingMessage =
   | { command: 'ready' }
@@ -31,7 +52,14 @@ export class PresetManagerPanel {
       'presetManager',
       'User Settings Presets',
       vscode.ViewColumn.One,
-      { enableScripts: true, retainContextWhenHidden: true },
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+        localResourceRoots: [
+          vscode.Uri.joinPath(context.extensionUri, 'media'),
+          vscode.Uri.joinPath(context.extensionUri, 'out', 'webview'),
+        ],
+      },
     );
 
     PresetManagerPanel._instance = new PresetManagerPanel(panel, context);
@@ -68,9 +96,13 @@ export class PresetManagerPanel {
     const jsUri = this._panel.webview.asWebviewUri(
       vscode.Uri.file(path.join(this._context.extensionPath, 'out', 'webview', 'script.js')),
     );
+    const nonce = randomBytes(16).toString('hex');
+    const cspSource = this._panel.webview.cspSource;
 
     html = html.replace('{{CSS_URI}}', cssUri.toString());
     html = html.replace('{{JS_URI}}', jsUri.toString());
+    html = html.replace(/\{\{NONCE\}\}/g, nonce);
+    html = html.replace(/\{\{CSP_SOURCE\}\}/g, cspSource);
 
     return html;
   }
@@ -100,75 +132,91 @@ export class PresetManagerPanel {
   }
 
   public handleReady(): void {
-    this.refresh();
+    try {
+      this.refresh();
+    } catch (err) {
+      notifyError('load presets', err);
+    }
   }
 
   public async handleSave(msg: { preset: SettingPreset; oldName?: string }): Promise<void> {
-    const presets = loadPresets(this._context);
-    const activeName = this._context.globalState.get<string>(SELECTED_PRESET_KEY);
+    try {
+      const presets = loadPresets(this._context);
+      const activeName = this._context.globalState.get<string>(SELECTED_PRESET_KEY);
 
-    const savingActivePreset = msg.oldName
-      ? activeName === msg.oldName
-      : activeName === msg.preset.name;
+      const savingActivePreset = msg.oldName
+        ? activeName === msg.oldName
+        : activeName === msg.preset.name;
 
-    if (savingActivePreset) {
-      await writeSetting(msg.preset.settingKey, msg.preset.value, getUserSettingsUri(this._context));
+      if (savingActivePreset) {
+        await writeSetting(msg.preset.settingKey, msg.preset.value, getUserSettingsUri(this._context));
+      }
+
+      const newPresets = upsertPreset(presets, msg.preset, msg.oldName);
+      await this._context.globalState.update(PRESETS_KEY, newPresets);
+
+      const newActiveName = resolveActiveAfterSave(activeName, msg.oldName, msg.preset.name);
+      if (newActiveName !== activeName) {
+        await this._context.globalState.update(SELECTED_PRESET_KEY, newActiveName);
+      }
+      this.refresh();
+    } catch (err) {
+      notifyError('save preset', err);
     }
-
-    const newPresets = upsertPreset(presets, msg.preset, msg.oldName);
-    await this._context.globalState.update(PRESETS_KEY, newPresets);
-
-    const newActiveName = resolveActiveAfterSave(activeName, msg.oldName, msg.preset.name);
-    if (newActiveName !== activeName) {
-      await this._context.globalState.update(SELECTED_PRESET_KEY, newActiveName);
-    }
-    this.refresh();
   }
 
   public async handleApply(msg: { presetName: string }): Promise<void> {
-    const presets = loadPresets(this._context);
-    const preset = presets.find(p => p.name === msg.presetName);
-    if (!preset) return;
-    await writeSetting(preset.settingKey, preset.value, getUserSettingsUri(this._context));
-    await this._context.globalState.update(SELECTED_PRESET_KEY, preset.name);
-    this.refresh();
+    try {
+      const presets = loadPresets(this._context);
+      const preset = presets.find(p => p.name === msg.presetName);
+      if (!preset) return;
+      await writeSetting(preset.settingKey, preset.value, getUserSettingsUri(this._context));
+      await this._context.globalState.update(SELECTED_PRESET_KEY, preset.name);
+      this.refresh();
 
-    const reload = await vscode.window.showInformationMessage(
-      `Preset "${preset.name}" applied. Reload the window to apply changes to settings.json.`,
-      'Reload Window',
-    );
-    if (reload === 'Reload Window') {
-      vscode.commands.executeCommand('workbench.action.reloadWindow');
+      const reload = await vscode.window.showInformationMessage(
+        `Preset "${preset.name}" applied. Reload the window to apply changes to settings.json.`,
+        'Reload Window',
+      );
+      if (reload === 'Reload Window') {
+        vscode.commands.executeCommand('workbench.action.reloadWindow');
+      }
+    } catch (err) {
+      notifyError('apply preset', err);
     }
   }
 
   public async handleDelete(msg: { presetName: string }): Promise<void> {
-    const confirm = await vscode.window.showWarningMessage(
-      `Delete preset "${msg.presetName}"? This cannot be undone.`,
-      { modal: true },
-      'Delete',
-    );
-    if (confirm !== 'Delete') return;
+    try {
+      const confirm = await vscode.window.showWarningMessage(
+        `Delete preset "${msg.presetName}"? This cannot be undone.`,
+        { modal: true },
+        'Delete',
+      );
+      if (confirm !== 'Delete') return;
 
-    const presets = loadPresets(this._context);
-    const preset = presets.find(p => p.name === msg.presetName);
-    if (!preset) return;
+      const presets = loadPresets(this._context);
+      const preset = presets.find(p => p.name === msg.presetName);
+      if (!preset) return;
 
-    const activeName: string | undefined = this._context.globalState.get(SELECTED_PRESET_KEY);
-    const wasActive = activeName === preset.name;
+      const activeName: string | undefined = this._context.globalState.get(SELECTED_PRESET_KEY);
+      const wasActive = activeName === preset.name;
 
-    if (wasActive) {
-      await clearSetting(preset.settingKey, getUserSettingsUri(this._context));
+      if (wasActive) {
+        await clearSetting(preset.settingKey, getUserSettingsUri(this._context));
+      }
+
+      const newPresets = deletePreset(presets, msg.presetName);
+      await this._context.globalState.update(PRESETS_KEY, newPresets);
+
+      const newActiveName = resolveActiveAfterDelete(activeName, msg.presetName);
+      if (newActiveName !== activeName) {
+        await this._context.globalState.update(SELECTED_PRESET_KEY, newActiveName);
+      }
+      this.refresh();
+    } catch (err) {
+      notifyError('delete preset', err);
     }
-
-    const newPresets = deletePreset(presets, msg.presetName);
-    await this._context.globalState.update(PRESETS_KEY, newPresets);
-
-    const newActiveName = resolveActiveAfterDelete(activeName, msg.presetName);
-    if (newActiveName !== activeName) {
-      await this._context.globalState.update(SELECTED_PRESET_KEY, newActiveName);
-    }
-    this.refresh();
   }
 }
 
@@ -186,7 +234,7 @@ export async function readUserSettings(uri: vscode.Uri): Promise<Record<string, 
     const text = Buffer.from(raw).toString('utf8');
     return JSON.parse(stripJsonComments(text));
   } catch (err) {
-    console.error('[PresetManager] Read failed for:', uri.fsPath, err);
+    log?.appendLine(`[ERROR] Read failed for ${uri.fsPath}: ${formatError(err)}`);
     return {};
   }
 }
@@ -196,18 +244,18 @@ export function isRemote(): boolean {
 }
 
 async function writeSetting(settingKey: string, value: unknown, settingsUri: vscode.Uri) {
-  console.log('[PresetManager] === WRITE START ===');
-  console.log('[PresetManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
-  console.log('[PresetManager] Key:', settingKey, 'Value:', JSON.stringify(value));
+  log?.appendLine('=== WRITE START ===');
+  log?.appendLine(`Remote: ${isRemote()}  Target: ${settingsUri.fsPath}`);
+  log?.appendLine(`Key: ${settingKey}  Value: ${JSON.stringify(value)}`);
 
   try {
     if (isRemote()) {
-      console.log('[PresetManager] Remote detected — using config.update');
+      log?.appendLine('Remote detected — using config.update');
       const config = vscode.workspace.getConfiguration();
       await config.update(settingKey, value, vscode.ConfigurationTarget.Global);
     } else {
       const settingsBefore = await readUserSettings(settingsUri);
-      console.log('[PresetManager] Settings BEFORE:', JSON.stringify(settingsBefore, null, 2));
+      log?.appendLine(`Settings BEFORE: ${JSON.stringify(settingsBefore, null, 2)}`);
 
       settingsBefore[settingKey] = value;
 
@@ -217,29 +265,29 @@ async function writeSetting(settingKey: string, value: unknown, settingsUri: vsc
       const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
       const verifyText = Buffer.from(verifyRaw).toString('utf8');
       const verify = JSON.parse(stripJsonComments(verifyText));
-      console.log('[PresetManager] Settings AFTER:', JSON.stringify(verify, null, 2));
+      log?.appendLine(`Settings AFTER: ${JSON.stringify(verify, null, 2)}`);
 
       if (JSON.stringify(verify[settingKey]) === JSON.stringify(value)) {
-        console.log('[PresetManager] VERIFY: OK');
+        log?.appendLine('VERIFY: OK');
       } else {
-        console.error('[PresetManager] VERIFY: MISMATCH');
+        log?.appendLine('[ERROR] VERIFY: MISMATCH');
       }
     }
-    console.log('[PresetManager] === WRITE END ===');
+    log?.appendLine('=== WRITE END ===');
   } catch (err) {
-    console.error('[PresetManager] Write failed:', err);
+    log?.appendLine(`[ERROR] Write failed: ${formatError(err)}`);
     throw err;
   }
 }
 
 async function clearSetting(settingKey: string, settingsUri: vscode.Uri) {
-  console.log('[PresetManager] === CLEAR START ===');
-  console.log('[PresetManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
-  console.log('[PresetManager] Key:', settingKey);
+  log?.appendLine('=== CLEAR START ===');
+  log?.appendLine(`Remote: ${isRemote()}  Target: ${settingsUri.fsPath}`);
+  log?.appendLine(`Key: ${settingKey}`);
 
   try {
     if (isRemote()) {
-      console.log('[PresetManager] Remote detected — using config.update');
+      log?.appendLine('Remote detected — using config.update');
       const config = vscode.workspace.getConfiguration();
       await config.update(settingKey, undefined, vscode.ConfigurationTarget.Global);
     } else {
@@ -252,17 +300,17 @@ async function clearSetting(settingKey: string, settingsUri: vscode.Uri) {
       const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
       const verifyText = Buffer.from(verifyRaw).toString('utf8');
       const verify = JSON.parse(stripJsonComments(verifyText));
-      console.log('[PresetManager] Settings AFTER:', JSON.stringify(verify, null, 2));
+      log?.appendLine(`Settings AFTER: ${JSON.stringify(verify, null, 2)}`);
 
       if (!(settingKey in verify)) {
-        console.log('[PresetManager] VERIFY: OK');
+        log?.appendLine('VERIFY: OK');
       } else {
-        console.error('[PresetManager] VERIFY: MISMATCH');
+        log?.appendLine('[ERROR] VERIFY: MISMATCH');
       }
     }
-    console.log('[PresetManager] === CLEAR END ===');
+    log?.appendLine('=== CLEAR END ===');
   } catch (err) {
-    console.error('[PresetManager] Clear failed:', err);
+    log?.appendLine(`[ERROR] Clear failed: ${formatError(err)}`);
     throw err;
   }
 }

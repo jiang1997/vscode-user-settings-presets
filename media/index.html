@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{CSP_SOURCE}} 'unsafe-inline'; img-src {{CSP_SOURCE}} data:; script-src 'nonce-{{NONCE}}';">
 <link rel="stylesheet" href="{{CSS_URI}}">
 </head>
 <body>
@@ -60,6 +61,6 @@
   </div>
 </div>
 
-<script src="{{JS_URI}}"></script>
+<script nonce="{{NONCE}}" src="{{JS_URI}}"></script>
 </body>
 </html>
