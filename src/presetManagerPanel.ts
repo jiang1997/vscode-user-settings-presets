@@ -149,7 +149,7 @@ export class PresetManagerPanel {
         : appliedPresetName === msg.preset.name;
 
       if (savingAppliedPreset) {
-        await writeSetting(msg.preset.settingKey, msg.preset.value, getUserSettingsUri(this._context));
+        await writeSetting(msg.preset.settingKey, msg.preset.value);
       }
 
       const newPresets = upsertPreset(presets, msg.preset, msg.oldName);
@@ -170,7 +170,7 @@ export class PresetManagerPanel {
       const presets = loadPresets(this._context);
       const preset = presets.find(p => p.name === msg.presetName);
       if (!preset) return;
-      await writeSetting(preset.settingKey, preset.value, getUserSettingsUri(this._context));
+      await writeSetting(preset.settingKey, preset.value);
       await this._context.globalState.update(APPLIED_PRESET_KEY, preset.name);
       this.refresh();
 
@@ -203,7 +203,7 @@ export class PresetManagerPanel {
       const wasApplied = appliedPresetName === preset.name;
 
       if (wasApplied) {
-        await clearSetting(preset.settingKey, getUserSettingsUri(this._context));
+        await clearSetting(preset.settingKey);
       }
 
       const newPresets = deletePreset(presets, msg.presetName);
@@ -239,39 +239,19 @@ export async function readUserSettings(uri: vscode.Uri): Promise<Record<string, 
   }
 }
 
-export function isRemote(): boolean {
-  return vscode.env.remoteName !== undefined;
-}
-
-async function writeSetting(settingKey: string, value: unknown, settingsUri: vscode.Uri) {
+async function writeSetting(settingKey: string, value: unknown) {
   log?.appendLine('=== WRITE START ===');
-  log?.appendLine(`Remote: ${isRemote()}  Target: ${settingsUri.fsPath}`);
   log?.appendLine(`Key: ${settingKey}  Value: ${JSON.stringify(value)}`);
 
   try {
-    if (isRemote()) {
-      log?.appendLine('Remote detected — using config.update');
-      const config = vscode.workspace.getConfiguration();
-      await config.update(settingKey, value, vscode.ConfigurationTarget.Global);
+    const config = vscode.workspace.getConfiguration();
+    await config.update(settingKey, value, vscode.ConfigurationTarget.Global);
+
+    const verify = config.get(settingKey);
+    if (JSON.stringify(verify) === JSON.stringify(value)) {
+      log?.appendLine('VERIFY: OK');
     } else {
-      const settingsBefore = await readUserSettings(settingsUri);
-      log?.appendLine(`Settings BEFORE: ${JSON.stringify(settingsBefore, null, 2)}`);
-
-      settingsBefore[settingKey] = value;
-
-      const data = Buffer.from(JSON.stringify(settingsBefore, null, 4), 'utf8');
-      await vscode.workspace.fs.writeFile(settingsUri, data);
-
-      const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
-      const verifyText = Buffer.from(verifyRaw).toString('utf8');
-      const verify = JSON.parse(stripJsonComments(verifyText));
-      log?.appendLine(`Settings AFTER: ${JSON.stringify(verify, null, 2)}`);
-
-      if (JSON.stringify(verify[settingKey]) === JSON.stringify(value)) {
-        log?.appendLine('VERIFY: OK');
-      } else {
-        log?.appendLine('[ERROR] VERIFY: MISMATCH');
-      }
+      log?.appendLine('[ERROR] VERIFY: MISMATCH');
     }
     log?.appendLine('=== WRITE END ===');
   } catch (err) {
@@ -280,33 +260,19 @@ async function writeSetting(settingKey: string, value: unknown, settingsUri: vsc
   }
 }
 
-async function clearSetting(settingKey: string, settingsUri: vscode.Uri) {
+async function clearSetting(settingKey: string) {
   log?.appendLine('=== CLEAR START ===');
-  log?.appendLine(`Remote: ${isRemote()}  Target: ${settingsUri.fsPath}`);
   log?.appendLine(`Key: ${settingKey}`);
 
   try {
-    if (isRemote()) {
-      log?.appendLine('Remote detected — using config.update');
-      const config = vscode.workspace.getConfiguration();
-      await config.update(settingKey, undefined, vscode.ConfigurationTarget.Global);
+    const config = vscode.workspace.getConfiguration();
+    await config.update(settingKey, undefined, vscode.ConfigurationTarget.Global);
+
+    const verify = config.inspect(settingKey);
+    if (!verify || (verify.globalValue === undefined && verify.workspaceValue === undefined)) {
+      log?.appendLine('VERIFY: OK');
     } else {
-      const settingsBefore = await readUserSettings(settingsUri);
-      delete settingsBefore[settingKey];
-
-      const data = Buffer.from(JSON.stringify(settingsBefore, null, 4), 'utf8');
-      await vscode.workspace.fs.writeFile(settingsUri, data);
-
-      const verifyRaw = await vscode.workspace.fs.readFile(settingsUri);
-      const verifyText = Buffer.from(verifyRaw).toString('utf8');
-      const verify = JSON.parse(stripJsonComments(verifyText));
-      log?.appendLine(`Settings AFTER: ${JSON.stringify(verify, null, 2)}`);
-
-      if (!(settingKey in verify)) {
-        log?.appendLine('VERIFY: OK');
-      } else {
-        log?.appendLine('[ERROR] VERIFY: MISMATCH');
-      }
+      log?.appendLine('[ERROR] VERIFY: MISMATCH');
     }
     log?.appendLine('=== CLEAR END ===');
   } catch (err) {
