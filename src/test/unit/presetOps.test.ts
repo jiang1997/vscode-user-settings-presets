@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { SettingPreset } from '../../types';
-import { upsertPreset, deletePreset, resolveActiveAfterDelete, findPreset, resolveActiveAfterSave } from '../../lib/presetOps';
+import { upsertPreset, deletePreset, resolveAppliedAfterDelete, findPreset, resolveAppliedAfterSave } from '../../lib/presetOps';
 
 const samplePreset: SettingPreset = {
   name: 'prod',
@@ -70,17 +70,17 @@ describe('presetOps', () => {
     });
   });
 
-  describe('resolveActiveAfterDelete', () => {
-    it('clears active when deleted preset was active', () => {
-      assert.strictEqual(resolveActiveAfterDelete('prod', 'prod'), undefined);
+  describe('resolveAppliedAfterDelete', () => {
+    it('clears applied when deleted preset was applied', () => {
+      assert.strictEqual(resolveAppliedAfterDelete('prod', 'prod'), undefined);
     });
 
-    it('keeps active when another preset was deleted', () => {
-      assert.strictEqual(resolveActiveAfterDelete('staging', 'prod'), 'staging');
+    it('keeps applied when another preset was deleted', () => {
+      assert.strictEqual(resolveAppliedAfterDelete('staging', 'prod'), 'staging');
     });
 
-    it('keeps undefined when nothing was active', () => {
-      assert.strictEqual(resolveActiveAfterDelete(undefined, 'prod'), undefined);
+    it('keeps undefined when nothing was applied', () => {
+      assert.strictEqual(resolveAppliedAfterDelete(undefined, 'prod'), undefined);
     });
   });
 
@@ -97,17 +97,17 @@ describe('presetOps', () => {
     });
   });
 
-  describe('resolveActiveAfterSave', () => {
-    it('returns newName when the active preset is being renamed', () => {
-      assert.strictEqual(resolveActiveAfterSave('prod', 'prod', 'production'), 'production');
+  describe('resolveAppliedAfterSave', () => {
+    it('returns newName when the applied preset is being renamed', () => {
+      assert.strictEqual(resolveAppliedAfterSave('prod', 'prod', 'production'), 'production');
     });
 
-    it('returns newName when overwriting the currently-active preset with the same name', () => {
-      assert.strictEqual(resolveActiveAfterSave('prod', undefined, 'prod'), 'prod');
+    it('returns newName when overwriting the currently-applied preset with the same name', () => {
+      assert.strictEqual(resolveAppliedAfterSave('prod', undefined, 'prod'), 'prod');
     });
 
-    it('returns activeName when saving an unrelated preset', () => {
-      assert.strictEqual(resolveActiveAfterSave('prod', undefined, 'staging'), 'prod');
+    it('returns appliedPresetName when saving an unrelated preset', () => {
+      assert.strictEqual(resolveAppliedAfterSave('prod', undefined, 'staging'), 'prod');
     });
   });
 });

@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { PRESETS_KEY, SELECTED_PRESET_KEY, SettingPreset } from '../../../types';
+import { PRESETS_KEY, APPLIED_PRESET_KEY, SettingPreset } from '../../../types';
 import type { PresetManagerPanel } from '../../../presetManagerPanel';
 import {
   getExtensionContext,
@@ -55,7 +55,7 @@ describe('CRUD', () => {
 
     const settings = await readSettings(ctx);
     assert.strictEqual(settings['foo'], 42);
-    assert.strictEqual(ctx.globalState.get(SELECTED_PRESET_KEY), 'p1');
+    assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), 'p1');
   });
 
   it('delete removes preset from globalState', async () => {

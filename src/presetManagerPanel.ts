@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { randomBytes } from 'crypto';
 import stripJsonComments from 'strip-json-comments';
-import { SettingPreset, loadPresets, PRESETS_KEY, SELECTED_PRESET_KEY } from './types';
-import { upsertPreset, deletePreset, resolveActiveAfterDelete, resolveActiveAfterSave } from './lib/presetOps';
+import { SettingPreset, loadPresets, PRESETS_KEY, APPLIED_PRESET_KEY } from './types';
+import { upsertPreset, deletePreset, resolveAppliedAfterDelete, resolveAppliedAfterSave } from './lib/presetOps';
 
 let log: vscode.OutputChannel | undefined;
 
@@ -109,11 +109,11 @@ export class PresetManagerPanel {
 
   private refresh(): void {
     const presets = loadPresets(this._context);
-    const activeName: string | undefined = this._context.globalState.get(SELECTED_PRESET_KEY);
+    const appliedPresetName: string | undefined = this._context.globalState.get(APPLIED_PRESET_KEY);
     this._panel.webview.postMessage({
       command: 'init',
       presets,
-      activePresetName: activeName ?? null,
+      appliedPresetName: appliedPresetName ?? null,
     });
   }
 
@@ -142,22 +142,22 @@ export class PresetManagerPanel {
   public async handleSave(msg: { preset: SettingPreset; oldName?: string }): Promise<void> {
     try {
       const presets = loadPresets(this._context);
-      const activeName = this._context.globalState.get<string>(SELECTED_PRESET_KEY);
+      const appliedPresetName = this._context.globalState.get<string>(APPLIED_PRESET_KEY);
 
-      const savingActivePreset = msg.oldName
-        ? activeName === msg.oldName
-        : activeName === msg.preset.name;
+      const savingAppliedPreset = msg.oldName
+        ? appliedPresetName === msg.oldName
+        : appliedPresetName === msg.preset.name;
 
-      if (savingActivePreset) {
+      if (savingAppliedPreset) {
         await writeSetting(msg.preset.settingKey, msg.preset.value, getUserSettingsUri(this._context));
       }
 
       const newPresets = upsertPreset(presets, msg.preset, msg.oldName);
       await this._context.globalState.update(PRESETS_KEY, newPresets);
 
-      const newActiveName = resolveActiveAfterSave(activeName, msg.oldName, msg.preset.name);
-      if (newActiveName !== activeName) {
-        await this._context.globalState.update(SELECTED_PRESET_KEY, newActiveName);
+      const newAppliedPresetName = resolveAppliedAfterSave(appliedPresetName, msg.oldName, msg.preset.name);
+      if (newAppliedPresetName !== appliedPresetName) {
+        await this._context.globalState.update(APPLIED_PRESET_KEY, newAppliedPresetName);
       }
       this.refresh();
     } catch (err) {
@@ -171,7 +171,7 @@ export class PresetManagerPanel {
       const preset = presets.find(p => p.name === msg.presetName);
       if (!preset) return;
       await writeSetting(preset.settingKey, preset.value, getUserSettingsUri(this._context));
-      await this._context.globalState.update(SELECTED_PRESET_KEY, preset.name);
+      await this._context.globalState.update(APPLIED_PRESET_KEY, preset.name);
       this.refresh();
 
       const reload = await vscode.window.showInformationMessage(
@@ -199,19 +199,19 @@ export class PresetManagerPanel {
       const preset = presets.find(p => p.name === msg.presetName);
       if (!preset) return;
 
-      const activeName: string | undefined = this._context.globalState.get(SELECTED_PRESET_KEY);
-      const wasActive = activeName === preset.name;
+      const appliedPresetName: string | undefined = this._context.globalState.get(APPLIED_PRESET_KEY);
+      const wasApplied = appliedPresetName === preset.name;
 
-      if (wasActive) {
+      if (wasApplied) {
         await clearSetting(preset.settingKey, getUserSettingsUri(this._context));
       }
 
       const newPresets = deletePreset(presets, msg.presetName);
       await this._context.globalState.update(PRESETS_KEY, newPresets);
 
-      const newActiveName = resolveActiveAfterDelete(activeName, msg.presetName);
-      if (newActiveName !== activeName) {
-        await this._context.globalState.update(SELECTED_PRESET_KEY, newActiveName);
+      const newAppliedPresetName = resolveAppliedAfterDelete(appliedPresetName, msg.presetName);
+      if (newAppliedPresetName !== appliedPresetName) {
+        await this._context.globalState.update(APPLIED_PRESET_KEY, newAppliedPresetName);
       }
       this.refresh();
     } catch (err) {

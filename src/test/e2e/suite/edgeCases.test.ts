@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { PRESETS_KEY, SELECTED_PRESET_KEY, SettingPreset } from '../../../types';
+import { PRESETS_KEY, APPLIED_PRESET_KEY, SettingPreset } from '../../../types';
 import type { PresetManagerPanel } from '../../../presetManagerPanel';
 import {
   getExtensionContext,
@@ -34,7 +34,7 @@ describe('edge cases', () => {
     const renamed: SettingPreset = { name: 'p1-renamed', settingKey: 'foo', value: 1 };
     await panel.handleSave({ preset: renamed, oldName: 'p1' });
 
-    assert.strictEqual(ctx.globalState.get(SELECTED_PRESET_KEY), 'p1-renamed');
+    assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), 'p1-renamed');
     const settings = await readSettings(ctx);
     assert.strictEqual(settings['foo'], 1);
   });
@@ -50,7 +50,7 @@ describe('edge cases', () => {
 
       const settings = await readSettings(ctx);
       assert.strictEqual(settings['foo'], undefined);
-      assert.strictEqual(ctx.globalState.get(SELECTED_PRESET_KEY), undefined);
+      assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), undefined);
     } finally {
       restoreDeleteConfirm();
     }
@@ -80,6 +80,6 @@ describe('edge cases', () => {
     await panel.handleApply({ presetName: 'B' });
     settings = await readSettings(ctx);
     assert.strictEqual(settings['shared'], 'second');
-    assert.strictEqual(ctx.globalState.get(SELECTED_PRESET_KEY), 'B');
+    assert.strictEqual(ctx.globalState.get(APPLIED_PRESET_KEY), 'B');
   });
 });
