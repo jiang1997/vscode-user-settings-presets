@@ -225,7 +225,7 @@ export class PresetManagerPanel {
 export function getUserSettingsUri(context: vscode.ExtensionContext): vscode.Uri {
   const normalized = path.normalize(context.globalStorageUri.fsPath);
   const userDir = path.dirname(path.dirname(normalized));
-  return vscode.Uri.file(path.join(userDir, 'settings.json'));
+  return vscode.Uri.file(path.join(userDir, 'User', 'settings.json'));
 }
 
 export async function readUserSettings(uri: vscode.Uri): Promise<Record<string, unknown>> {
