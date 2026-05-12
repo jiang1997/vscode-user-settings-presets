@@ -42,7 +42,7 @@
     "test:unit": "mocha \"out/test/unit/**/*.test.js\"",
     "test:e2e": "node ./out/test/e2e/runTest.js",
     "test": "npm run compile && npm run test:unit && npm run test:e2e",
-    "lint": "eslint src",
+    "lint": "eslint src --max-warnings 0",
     "package": "vsce package"
   },
   "devDependencies": {

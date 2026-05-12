@@ -36,9 +36,12 @@ export async function resetState(ctx: vscode.ExtensionContext): Promise<void> {
   }
 }
 
-export async function readSettings(ctx: vscode.ExtensionContext): Promise<Record<string, any>> {
+export async function readSettings(ctx: vscode.ExtensionContext): Promise<Record<string, unknown>> {
   return readUserSettings(getUserSettingsUri(ctx));
 }
+
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
+type MutableWindow = Mutable<typeof vscode.window>;
 
 let originalShowInformationMessage: typeof vscode.window.showInformationMessage | undefined;
 
@@ -47,12 +50,13 @@ export function stubReloadPrompt(): void {
     throw new Error('stubReloadPrompt called while already stubbed; pair each call with restoreReloadPrompt');
   }
   originalShowInformationMessage = vscode.window.showInformationMessage;
-  (vscode.window as any).showInformationMessage = () => Promise.resolve(undefined);
+  (vscode.window as MutableWindow).showInformationMessage =
+    (() => Promise.resolve(undefined)) as unknown as typeof vscode.window.showInformationMessage;
 }
 
 export function restoreReloadPrompt(): void {
   if (originalShowInformationMessage) {
-    (vscode.window as any).showInformationMessage = originalShowInformationMessage;
+    (vscode.window as MutableWindow).showInformationMessage = originalShowInformationMessage;
     originalShowInformationMessage = undefined;
   }
 }
@@ -64,12 +68,13 @@ export function stubDeleteConfirm(): void {
     throw new Error('stubDeleteConfirm called while already stubbed; pair each call with restoreDeleteConfirm');
   }
   originalShowWarningMessage = vscode.window.showWarningMessage;
-  (vscode.window as any).showWarningMessage = () => Promise.resolve('Delete');
+  (vscode.window as MutableWindow).showWarningMessage =
+    (() => Promise.resolve('Delete')) as unknown as typeof vscode.window.showWarningMessage;
 }
 
 export function restoreDeleteConfirm(): void {
   if (originalShowWarningMessage) {
-    (vscode.window as any).showWarningMessage = originalShowWarningMessage;
+    (vscode.window as MutableWindow).showWarningMessage = originalShowWarningMessage;
     originalShowWarningMessage = undefined;
   }
 }

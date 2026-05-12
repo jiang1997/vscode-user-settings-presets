@@ -13,7 +13,7 @@ declare function acquireVsCodeApi(): VsCodeApi;
 interface SettingPreset {
   name: string;
   settingKey: string;
-  value: any;
+  value: unknown;
 }
 
 interface InitMessage {
@@ -28,7 +28,6 @@ type WebviewMessage = InitMessage;
 
 const vscode = acquireVsCodeApi();
 let presets: SettingPreset[] = [];
-let activePresetName: string | null = null;
 let currentPresetName = '';
 let originalPresetName = '';
 
@@ -70,7 +69,7 @@ function rebuildSidebar(keepName: string): void {
 
 interface PresetTemplate {
   settingKey: string;
-  value: any;
+  value: unknown;
 }
 
 const TEMPLATES: Record<string, PresetTemplate> = {
@@ -117,7 +116,6 @@ function clearForm(): void {
 
 function handleInit(data: InitMessage): void {
   presets = data.presets || [];
-  activePresetName = data.activePresetName;
 
   let keepName = currentPresetName;
   if (keepName && presets.every((p) => p.name !== keepName)) {
@@ -149,7 +147,7 @@ function validatePreset(): { ok: true; preset: SettingPreset } | { ok: false; er
   }
 
   const valueText = settingValueInput.value.trim();
-  let value: any;
+  let value: unknown;
   try {
     value = valueText ? JSON.parse(valueText) : undefined;
   } catch (e) {

@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 export interface SettingPreset {
   name: string;
   settingKey: string;
-  value: any;
+  value: unknown;
 }
 
 export const PRESETS_KEY = 'settingPresets';

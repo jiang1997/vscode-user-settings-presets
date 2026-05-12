@@ -180,7 +180,7 @@ export function getUserSettingsUri(context: vscode.ExtensionContext): vscode.Uri
   return vscode.Uri.file(path.join(userDir, 'settings.json'));
 }
 
-export async function readUserSettings(uri: vscode.Uri): Promise<Record<string, any>> {
+export async function readUserSettings(uri: vscode.Uri): Promise<Record<string, unknown>> {
   try {
     const raw = await vscode.workspace.fs.readFile(uri);
     const text = Buffer.from(raw).toString('utf8');
@@ -195,7 +195,7 @@ export function isRemote(): boolean {
   return vscode.env.remoteName !== undefined;
 }
 
-async function writeSetting(settingKey: string, value: any, settingsUri: vscode.Uri) {
+async function writeSetting(settingKey: string, value: unknown, settingsUri: vscode.Uri) {
   console.log('[PresetManager] === WRITE START ===');
   console.log('[PresetManager] Remote:', isRemote(), 'Target:', settingsUri.fsPath);
   console.log('[PresetManager] Key:', settingKey, 'Value:', JSON.stringify(value));
