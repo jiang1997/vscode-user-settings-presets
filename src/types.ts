@@ -7,7 +7,7 @@ export interface SettingPreset {
 }
 
 export const PRESETS_KEY = 'settingPresets';
-export const SELECTED_PRESET_KEY = 'selectedSettingPreset';
+export const APPLIED_PRESET_KEY = 'selectedSettingPreset';
 
 export function loadPresets(context: vscode.ExtensionContext): SettingPreset[] {
   return context.globalState.get(PRESETS_KEY, []);

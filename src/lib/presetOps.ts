@@ -28,11 +28,11 @@ export function deletePreset(
   return result;
 }
 
-export function resolveActiveAfterDelete(
-  activeName: string | undefined,
+export function resolveAppliedAfterDelete(
+  appliedPresetName: string | undefined,
   deletedName: string,
 ): string | undefined {
-  return activeName === deletedName ? undefined : activeName;
+  return appliedPresetName === deletedName ? undefined : appliedPresetName;
 }
 
 export function findPreset(
@@ -42,11 +42,11 @@ export function findPreset(
   return presets.find(p => p.name === name);
 }
 
-export function resolveActiveAfterSave(
-  activeName: string | undefined,
+export function resolveAppliedAfterSave(
+  appliedPresetName: string | undefined,
   oldName: string | undefined,
   newName: string,
 ): string | undefined {
   const targetedName = oldName ?? newName;
-  return activeName === targetedName ? newName : activeName;
+  return appliedPresetName === targetedName ? newName : appliedPresetName;
 }

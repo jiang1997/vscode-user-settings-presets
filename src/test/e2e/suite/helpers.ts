@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { PRESETS_KEY, SELECTED_PRESET_KEY } from '../../../types';
+import { PRESETS_KEY, APPLIED_PRESET_KEY } from '../../../types';
 import type * as PMP from '../../../presetManagerPanel';
 
 interface ExtensionExports {
@@ -36,7 +36,7 @@ export async function openPanel(): Promise<PMP.PresetManagerPanel> {
 export async function resetState(ctx: vscode.ExtensionContext): Promise<void> {
   const { getUserSettingsUri } = await getExports();
   await ctx.globalState.update(PRESETS_KEY, []);
-  await ctx.globalState.update(SELECTED_PRESET_KEY, undefined);
+  await ctx.globalState.update(APPLIED_PRESET_KEY, undefined);
   const uri = getUserSettingsUri(ctx);
   try {
     await vscode.workspace.fs.delete(uri);
