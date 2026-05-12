@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { PRESETS_KEY, SELECTED_PRESET_KEY, SettingPreset } from '../../../types';
-import { PresetManagerPanel } from '../../../presetManagerPanel';
+import type { PresetManagerPanel } from '../../../presetManagerPanel';
 import {
   getExtensionContext,
   openPanel,

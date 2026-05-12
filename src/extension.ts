@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
-import { PresetManagerPanel, setOutputChannel } from './presetManagerPanel';
+import {
+  PresetManagerPanel,
+  getUserSettingsUri,
+  readUserSettings,
+  setOutputChannel,
+} from './presetManagerPanel';
 
 export function activate(context: vscode.ExtensionContext) {
   const channel = vscode.window.createOutputChannel('User Settings Presets');
@@ -11,7 +16,12 @@ export function activate(context: vscode.ExtensionContext) {
       PresetManagerPanel.show(context);
     }),
   );
-  return { context };
+  return {
+    context,
+    panelClass: PresetManagerPanel,
+    getUserSettingsUri,
+    readUserSettings,
+  };
 }
 
 export function deactivate() {}
