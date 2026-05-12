@@ -57,6 +57,7 @@ Click **Apply** on either preset, then choose **Reload Window** in the notificat
 ```bash
 npm install
 npm run compile
+npm run lint      # ESLint (errors fail; existing `any` usages are warnings)
 npm run test:unit  # 16 unit tests (fast, no VS Code)
 npm run test:e2e   # 8 e2e tests (launches real VS Code via @vscode/test-electron)
 npm test           # both

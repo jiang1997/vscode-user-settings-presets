@@ -12,3 +12,4 @@ docs/**
 *.vsix
 out/test/**
 .vscode-test-user-data/**
+eslint.config.mjs

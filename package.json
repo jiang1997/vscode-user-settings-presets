@@ -42,17 +42,21 @@
     "test:unit": "mocha \"out/test/unit/**/*.test.js\"",
     "test:e2e": "node ./out/test/e2e/runTest.js",
     "test": "npm run compile && npm run test:unit && npm run test:e2e",
+    "lint": "eslint src",
     "package": "vsce package"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^18.19.130",
     "@types/vscode": "^1.75.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.0.0",
     "esbuild": "^0.28.0",
+    "eslint": "^10.3.0",
     "mocha": "^11.7.5",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.59.3"
   },
   "dependencies": {
     "strip-json-comments": "^5.0.3"
