@@ -19,7 +19,6 @@ interface SettingPreset {
 interface InitMessage {
   command: 'init';
   presets: SettingPreset[];
-  appliedPresetName: string | null;
 }
 
 type WebviewMessage = InitMessage;

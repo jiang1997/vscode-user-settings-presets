@@ -109,11 +109,9 @@ export class PresetManagerPanel {
 
   private refresh(): void {
     const presets = loadPresets(this._context);
-    const appliedPresetName: string | undefined = this._context.globalState.get(APPLIED_PRESET_KEY);
     this._panel.webview.postMessage({
       command: 'init',
       presets,
-      appliedPresetName: appliedPresetName ?? null,
     });
   }
 
